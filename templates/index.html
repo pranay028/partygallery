@@ -16,10 +16,15 @@
 </div>
 
 <div class="grid grid-cols-2 gap-3">
-    {% for i in range(4) %}
+    {% for image_url in images %}
         <div class="aspect-square rounded-2xl overflow-hidden bg-white/5">
-            <img src="https://picsum.photos/300/300?random={{ i }}" class="w-full h-full object-cover">
+            <img src="{{ image_url }}" class="w-full h-full object-cover">
+        </div>
+    {% else %}
+        <div class="col-span-2 text-center py-10 opacity-50">
+            <p>No photos uploaded yet. Be the first!</p>
         </div>
     {% endfor %}
+</div>
 </div>
 {% endblock %}
