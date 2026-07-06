@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2 class="text-2xl font-bold mb-6">Party Videos</h2>
+    
+    <div class="grid grid-cols-1 gap-6">
+        {% for video in videos %}
+            <div class="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+                <video class="w-full h-64 object-cover" controls>
+                    <source src="https://storage.googleapis.com/{{ bucket_name }}/{{ video.name }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="p-4">
+                    <p class="text-sm opacity-70 truncate">{{ video.name.replace('videos/', '') }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

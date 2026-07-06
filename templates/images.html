@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2 class="text-xl font-bold mb-4">Image Gallery</h2>
+    
+    <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {% for image in images %}
+            <img src="{{ image }}" class="rounded-lg w-full h-40 object-cover">
+        {% endfor %}
+    </div>
+
+    <button onclick="loadMore()" class="w-full mt-6 py-3 border-2 border-gray-300 rounded-lg text-gray-600 font-semibold">
+        Load More
+    </button>
+
+    <script>
+        function loadMore() {
+            // For now, this is just a placeholder. 
+            // In a real app, this would fetch the next 10 items from your backend.
+            alert("This will fetch the next 10 images from the cloud!");
+        }
+    </script>
+{% endblock %}

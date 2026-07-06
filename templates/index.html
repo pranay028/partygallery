@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-3xl shadow-2xl mb-8">
+        <h2 class="text-2xl font-bold mb-4">Add your moment</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="file" name="file" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            <button type="submit" class="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white py-3 rounded-full font-bold shadow-lg transform active:scale-95 transition">
+                Upload & Share
+            </button>
+        </form>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold opacity-90">Recent Highlights</h2>
+    <a href="/images" class="text-indigo-400 text-sm">View All</a>
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+    {% for i in range(4) %}
+        <div class="aspect-square rounded-2xl overflow-hidden bg-white/5">
+            <img src="https://picsum.photos/300/300?random={{ i }}" class="w-full h-full object-cover">
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
