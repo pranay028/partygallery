@@ -13,5 +13,5 @@ steps:
       - '--timeout'
       - '3600'
       - '--set-env-vars'
-      - 'BUCKET_NAME=party28'
+      - 'BUCKET_NAME=${_BUCKET_NAME},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID}'
       - '--allow-unauthenticated'
