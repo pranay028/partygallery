@@ -1,0 +1,17 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'party-app'
+      - '--source'
+      - '.'
+      - '--region'
+      - 'us-central1'
+      - '--memory'
+      - '1Gi'
+      - '--timeout'
+      - '3600'
+      - '--set-env-vars'
+      - 'BUCKET_NAME=party28'
+      - '--allow-unauthenticated'

@@ -1,5 +1,19 @@
-FROM python:3.9-slim
-WORKDIR /app
+# Use official lightweight Python image
+FROM python:3.13-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=True
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy local code to the container
 COPY . .
-RUN pip install -r requirements.txt
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
+
+# Run the web service using Gunicorn
+# --limit-request-line 0 and --limit-request-field_size 0 are the keys
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 3600 \
+    --limit-request-line 0 \
+    --limit-request-field_size 0 \
+    app:app
