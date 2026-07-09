@@ -12,8 +12,6 @@ steps:
       - '1Gi'
       - '--timeout'
       - '3600'
-      - '--max-request-size'
-      - '500Mi'
       - '--set-secrets=BUCKET_NAME=BUCKET_NAME:latest,GOOGLE_CLOUD_PROJECT=PROJECT_ID:latest'
       - '--allow-unauthenticated'
 
