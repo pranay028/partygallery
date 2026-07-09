@@ -12,7 +12,10 @@ steps:
       - '1Gi'
       - '--timeout'
       - '3600'
-      - '--set-secrets=BUCKET_NAME=BUCKET_NAME:latest,GOOGLE_CLOUD_PROJECT=PROJECT_ID:latest'
+      # The secret is here:
+      - '--set-secrets=BUCKET_NAME=BUCKET_NAME:latest'
+      # The project ID is here as a regular variable:
+      - '--set-env-vars=GOOGLE_CLOUD_PROJECT=partyphotos-501522'
       - '--allow-unauthenticated'
 
 options:
