@@ -12,6 +12,8 @@ steps:
       - '1Gi'
       - '--timeout'
       - '3600'
-      - '--set-env-vars'
-      - 'BUCKET_NAME=${_BUCKET_NAME},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID}'
+      - '--max-request-size'
+      - '500Mi'
+      # This injects the values directly from Secret Manager
+      - '--set-secrets=BUCKET_NAME=BUCKET_NAME:latest,GOOGLE_CLOUD_PROJECT=PROJECT_ID:latest'
       - '--allow-unauthenticated'

@@ -16,6 +16,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_random_string_here'
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 # Access the variables
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
@@ -81,32 +82,34 @@ def images():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # Get the files from the request
     files = request.files.getlist('files')
     
-    # NEW: Check if the batch size is greater than 10
-    if len(files) > 10:
+    # 1. Separate files by type
+    images = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'heic'}]
+    videos = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'mp4', 'mov', 'avi', 'webm', 'mkv'}]
+    
+    # 2. Enforce limits
+    if len(images) > 10:
         flash("You can only upload up to 10 photos at a time.")
+        return redirect(url_for('index'))
+        
+    if len(videos) > 1:
+        flash("You can only upload 1 video at a time.")
         return redirect(url_for('index'))
 
     bucket = storage_client.bucket(BUCKET_NAME)
     
-    # We no longer need to calculate photo_count from the bucket here 
-    # unless you want to show a warning if they reach a total limit later.
-    
+    # 3. Process files
     for file in files:
-        if not file or file.filename == '' or '.' not in file.filename:
-            continue
+        if not file or file.filename == '': continue
             
         ext = file.filename.rsplit('.', 1)[1].lower()
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
         
+        file.seek(0)
+        
         if ext in {'png', 'jpg', 'jpeg', 'gif', 'heic'}:
-            # REMOVED: The 'if photo_count < 10' check
-            
-            file.seek(0)
             file_bytes = file.read()
-            
             blob = bucket.blob(f"images/{unique_filename}")
             blob.upload_from_string(file_bytes, content_type=file.content_type)
             
@@ -117,13 +120,8 @@ def upload():
             thread.start()
                 
         elif ext in {'mp4', 'mov', 'avi', 'webm', 'mkv'}:
-            # If you want to limit video batch size to 1:
-            if len([f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'mp4', 'mov', 'avi', 'webm', 'mkv'}]) > 1:
-                flash("You can only upload 1 video at a time.")
-            else:
-                file.seek(0)
-                blob = bucket.blob(f"videos/{unique_filename}")
-                blob.upload_from_file(file, content_type=file.content_type)
+            blob = bucket.blob(f"videos/{unique_filename}")
+            blob.upload_from_file(file, content_type=file.content_type)
         else:
             flash(f"Unsupported file type: {file.filename}")
             
@@ -172,6 +170,15 @@ def get_signed_url():
         content_type=request.args.get('content_type')
     )
     return {"url": url}
+
+
+
+from werkzeug.exceptions import RequestEntityTooLarge
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return 'File too large! Max is 100MB', 413
+
 if __name__ == '__main__':
     # '0.0.0.0' makes it accessible on your local network
     # 8080 is the default port Cloud Run expects
