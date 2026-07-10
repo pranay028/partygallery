@@ -13,8 +13,15 @@ pillow_heif.register_heif_opener()
 
 # Load variables from .env file
 load_dotenv()
-import os
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/pranay/Desktop/partyphotos/service-account.json"
+
+# Only load the local JSON file if we are NOT in production
+# Cloud Run automatically sets the 'K_SERVICE' environment variable
+if not os.getenv('K_SERVICE'):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/pranay/Desktop/partyphotos/service-account.json"
+
+# Now initialize the client (this will work in both environments)
+storage_client = storage.Client()
+
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_random_string_here'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
