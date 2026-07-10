@@ -13,6 +13,9 @@ pillow_heif.register_heif_opener()
 
 # Load variables from .env file
 load_dotenv()
+_, default_project = google.auth.default()
+# This is your actual service account email
+SERVICE_ACCOUNT_EMAIL = "partyphotoslocal@partyphotos-501522.iam.gserviceaccount.com"
 
 # Only load the local JSON file if we are NOT in production
 # Cloud Run automatically sets the 'K_SERVICE' environment variable
@@ -198,22 +201,24 @@ def index():
     # Pass the dictionary to the template
     return render_template('index.html', images=images_data[:4])
 
-@app.route('/get-signed-url', methods=['GET'])
+@app.route('/get-signed-url')
 def get_signed_url():
     filename = request.args.get('filename')
-    folder = get_folder(filename)
-    unique_name = f"{folder}{uuid.uuid4()}_{filename}"
+    content_type = request.args.get('content_type')
     
-    blob = storage_client.bucket(BUCKET_NAME).blob(unique_name)
-    
-    # Generate a URL that allows a PUT request for 15 minutes
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(f"videos/{filename}")
+
+    # Use the 'service_account_email' argument to sign the URL
     url = blob.generate_signed_url(
         version="v4",
-        expiration=datetime.timedelta(minutes=15),
+        expiration=timedelta(minutes=15),
         method="PUT",
-        content_type=request.args.get('content_type')
+        content_type=content_type,
+        service_account_email=SERVICE_ACCOUNT_EMAIL,
+        access_token=None # Let the library handle the token
     )
-    return {"url": url}
+    return jsonify({"url": url})
 
 
 
