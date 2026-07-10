@@ -7,6 +7,7 @@ from google.cloud import storage
 import datetime
 from datetime import timedelta
 import google.auth
+from google.auth.transport import requests as google_auth_requests
 from PIL import Image
 import io
 import pillow_heif
@@ -186,15 +187,25 @@ def index():
 def get_signed_url():
     filename = request.args.get('filename')
     content_type = request.args.get('content_type')
+    
     bucket = storage_client.bucket(BUCKET_NAME)
     blob = bucket.blob(f"videos/{filename}")
+
+    # 1. Grab the default credentials (the Cloud Run environment identity)
+    credentials, _ = google.auth.default()
+    
+    # 2. Force a refresh to ensure we have an active access token
+    auth_request = google_auth_requests.Request()
+    credentials.refresh(auth_request)
+
+    # 3. Ask Google's IAM service to sign the URL using the token we just grabbed
     url = blob.generate_signed_url(
         version="v4",
         expiration=timedelta(minutes=15),
         method="PUT",
         content_type=content_type,
         service_account_email=SERVICE_ACCOUNT_EMAIL,
-        access_token=None
+        access_token=credentials.token  # <--- THIS IS THE MAGIC MISSING PIECE
     )
     return jsonify({"url": url})
 
