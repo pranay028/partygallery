@@ -13,7 +13,8 @@ pillow_heif.register_heif_opener()
 
 # Load variables from .env file
 load_dotenv()
-
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/pranay/Desktop/partyphotos/service-account.json"
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_random_string_here'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
@@ -79,57 +80,93 @@ def images():
     # Notice we don't slice with [:4] here, because we want ALL of them
     return render_template('images.html', images=images_data)
 
-
 @app.route('/upload', methods=['POST'])
 def upload():
     files = request.files.getlist('files')
-    
-    # 1. Separate files by type
-    images = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'heic'}]
-    videos = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'mp4', 'mov', 'avi', 'webm', 'mkv'}]
-    
-    # 2. Enforce limits
-    if len(images) > 10:
-        flash("You can only upload up to 10 photos at a time.")
-        return redirect(url_for('index'))
-        
-    if len(videos) > 1:
-        flash("You can only upload 1 video at a time.")
-        return redirect(url_for('index'))
-
     bucket = storage_client.bucket(BUCKET_NAME)
     
-    # 3. Process files
     for file in files:
         if not file or file.filename == '': continue
-            
-        ext = file.filename.rsplit('.', 1)[1].lower()
+        
+        # Now this route ONLY receives images from the frontend
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
+        file_bytes = file.read()
         
-        file.seek(0)
+        blob = bucket.blob(f"images/{unique_filename}")
+        blob.upload_from_string(file_bytes, content_type=file.content_type)
         
-        if ext in {'png', 'jpg', 'jpeg', 'gif', 'heic'}:
-            file_bytes = file.read()
-            blob = bucket.blob(f"images/{unique_filename}")
-            blob.upload_from_string(file_bytes, content_type=file.content_type)
+        thread = threading.Thread(
+            target=generate_thumbnail_in_background, 
+            args=(file_bytes, unique_filename, BUCKET_NAME, PROJECT_ID)
+        )
+        thread.start()
             
-            thread = threading.Thread(
-                target=generate_thumbnail_in_background, 
-                args=(file_bytes, unique_filename, BUCKET_NAME, PROJECT_ID)
-            )
-            thread.start()
+    return redirect(url_for('index')) 
+
+# @app.route('/upload', methods=['POST'])
+# def upload():
+#     files = request.files.getlist('files')
+#     print(f"DEBUG: Received {len(files)} files") # Check the logs for this!
+#     if len(files) == 0:
+#         return "No files received", 400
+#     # ... rest of your code
+#     # 1. Separate files by type
+#     images = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'heic'}]
+#     videos = [f for f in files if f.filename.rsplit('.', 1)[1].lower() in {'mp4', 'mov', 'avi', 'webm', 'mkv'}]
+    
+#     # 2. Enforce limits
+#     if len(images) > 10:
+#         flash("You can only upload up to 10 photos at a time.")
+#         return redirect(url_for('index'))
+        
+#     if len(videos) > 1:
+#         flash("You can only upload 1 video at a time.")
+#         return redirect(url_for('index'))
+
+#     bucket = storage_client.bucket(BUCKET_NAME)
+    
+#     # 3. Process files
+#     for file in files:
+#         if not file or file.filename == '': continue
+            
+#         ext = file.filename.rsplit('.', 1)[1].lower()
+#         unique_filename = f"{uuid.uuid4()}_{file.filename}"
+        
+#         file.seek(0)
+        
+#         if ext in {'png', 'jpg', 'jpeg', 'gif', 'heic'}:
+#             file_bytes = file.read()
+#             blob = bucket.blob(f"images/{unique_filename}")
+#             blob.upload_from_string(file_bytes, content_type=file.content_type)
+            
+#             thread = threading.Thread(
+#                 target=generate_thumbnail_in_background, 
+#                 args=(file_bytes, unique_filename, BUCKET_NAME, PROJECT_ID)
+#             )
+#             thread.start()
+#             return redirect(url_for('index'))
                 
-        elif ext in {'mp4', 'mov', 'avi', 'webm', 'mkv'}:
-            blob = bucket.blob(f"videos/{unique_filename}")
-            blob.upload_from_file(file, content_type=file.content_type)
-        else:
-            flash(f"Unsupported file type: {file.filename}")
+#         elif ext in {'mp4', 'mov', 'avi', 'webm', 'mkv'}:
+#             blob = bucket.blob(f"videos/{unique_filename}")
+#             blob.upload_from_file(file, content_type=file.content_type)
+#             return redirect(url_for('videos'))
+#         else:
+#             flash(f"Unsupported file type: {file.filename}")
             
-    return redirect(url_for('index'))
+#     return "Upload error please try again"
+    
 
 @app.route('/videos')
 def videos():
-    blobs = list(storage_client.list_blobs(BUCKET_NAME, prefix='videos/'))
+    bucket = storage_client.bucket(BUCKET_NAME)
+    
+    # Fetch ALL blobs (or a large enough subset)
+    blobs = list(bucket.list_blobs(prefix='videos/'))
+    
+    # Sort the entire list in memory
+    blobs.sort(key=lambda x: x.time_created, reverse=True)
+    
+    # You can now manually slice the list if you really want "pages"
     return render_template('videos.html', videos=blobs, bucket_name=BUCKET_NAME)
 
 @app.route('/')

@@ -3,3 +3,4 @@ venv/
 __pycache__/
 new.py
 test_index.html
+service-account.json
