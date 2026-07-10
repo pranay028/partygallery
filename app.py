@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, flash, request, redirect, url_for
 from google.cloud import storage
 import datetime
+from datetime import timedelta
+import google.auth
 from PIL import Image
 import io
 import pillow_heif
@@ -45,26 +47,17 @@ def get_folder(filename):
 
 def generate_thumbnail_in_background(file_bytes, unique_filename, bucket_name, project_id):
     try:
-        # 1. Create a fresh connection for the background worker
         client = storage.Client(project=project_id)
         bucket = client.bucket(bucket_name)
-        
-        # 2. Open the image from memory
         img = Image.open(io.BytesIO(file_bytes))
-        
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
-            
         img.thumbnail((400, 400))
-        
-        # 3. Save it and upload the thumbnail
         thumb_io = io.BytesIO()
         img.save(thumb_io, format='JPEG', quality=80)
         thumb_io.seek(0)
-        
         thumb_blob = bucket.blob(f"thumbnails/{unique_filename}")
         thumb_blob.upload_from_file(thumb_io, content_type='image/jpeg')
-        
     except Exception as e:
         print(f"DEBUG: Background thumbnail failed: {e}")
 
@@ -94,24 +87,18 @@ def images():
 def upload():
     files = request.files.getlist('files')
     bucket = storage_client.bucket(BUCKET_NAME)
-    
     for file in files:
         if not file or file.filename == '': continue
-        
-        # Now this route ONLY receives images from the frontend
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
         file_bytes = file.read()
-        
         blob = bucket.blob(f"images/{unique_filename}")
         blob.upload_from_string(file_bytes, content_type=file.content_type)
-        
         thread = threading.Thread(
             target=generate_thumbnail_in_background, 
             args=(file_bytes, unique_filename, BUCKET_NAME, PROJECT_ID)
         )
         thread.start()
-            
-    return redirect(url_for('index')) 
+    return redirect(url_for('index'))
 
 # @app.route('/upload', methods=['POST'])
 # def upload():
@@ -182,41 +169,32 @@ def videos():
 @app.route('/')
 def index():
     bucket = storage_client.bucket(BUCKET_NAME)
-    
     all_blobs = list(bucket.list_blobs(prefix='images/'))
     file_blobs = [b for b in all_blobs if not b.name.endswith('/')]
     file_blobs.sort(key=lambda x: x.time_created, reverse=True)
     
-    # Create a list of dictionaries containing BOTH URLs
     images_data = []
     for blob in file_blobs:
-        # Get just the filename (e.g., '1234_party.jpg')
         filename = blob.name.split('/')[-1] 
-        
         images_data.append({
             'original': f"https://storage.googleapis.com/{BUCKET_NAME}/images/{filename}",
             'thumbnail': f"https://storage.googleapis.com/{BUCKET_NAME}/thumbnails/{filename}"
         })
-    
-    # Pass the dictionary to the template
     return render_template('index.html', images=images_data[:4])
 
 @app.route('/get-signed-url')
 def get_signed_url():
     filename = request.args.get('filename')
     content_type = request.args.get('content_type')
-    
     bucket = storage_client.bucket(BUCKET_NAME)
     blob = bucket.blob(f"videos/{filename}")
-
-    # Use the 'service_account_email' argument to sign the URL
     url = blob.generate_signed_url(
         version="v4",
         expiration=timedelta(minutes=15),
         method="PUT",
         content_type=content_type,
         service_account_email=SERVICE_ACCOUNT_EMAIL,
-        access_token=None # Let the library handle the token
+        access_token=None
     )
     return jsonify({"url": url})
 
