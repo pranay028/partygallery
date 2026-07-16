@@ -210,7 +210,7 @@ def index():
     
     # Process the top 4 items
     recent_media = []
-    for blob in all_media[:4]:
+    for blob in all_media[:6]:
         filename = blob.name.split('/')[-1]
         is_video = blob.name.startswith('videos/')
         
