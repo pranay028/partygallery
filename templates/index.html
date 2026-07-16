@@ -2,19 +2,18 @@
 
 {% block content %}
     <div class="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-3xl shadow-2xl mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-white">Show us the night</h2>
+        <h2 class="text-2xl font-bold mb-4 text-white">The Party Vault 📸</h2>
         <p class="text-sm text-gray-400 mb-6 italic">
-            "Legendary group shots, solo portraits, or total disasters—we want it all. If it happened at the party, it belongs here."
+            "Group shots, candid chaos, or blurry masterpieces—if it happened tonight, it belongs in the vault."
         </p>
         
         <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data" class="space-y-4">
-            
             <input type="file" id="fileInput" name="files" multiple accept="image/*,video/*" 
                    class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer transition" required>
             
             <button type="button" onclick="handleUpload()"
-                    class="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white py-3 rounded-full font-bold shadow-lg">
-                Add to the vault
+                    class="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white py-3 rounded-full font-bold shadow-lg hover:scale-[1.01] transition-transform">
+                Add to the Collection
             </button>
 
             {% with messages = get_flashed_messages() %}
@@ -32,22 +31,45 @@
     </div>
 
     <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-white">Recent Highlights</h2>
-        <a href="/images" class="text-indigo-400 text-sm hover:underline">View All</a>
+        <h2 class="text-lg font-semibold text-white">Fresh Drops 🔥</h2>
+        
     </div>
 
     <div class="grid grid-cols-2 gap-3">
-        {% for img in images %}
-            <div class="aspect-square rounded-2xl overflow-hidden bg-white/5 cursor-pointer hover:opacity-80 transition" 
-                 onclick="openImageModal('{{ img.original }}')">
-                <img src="{{ img.thumbnail }}" 
-                     class="w-full h-full object-cover pointer-events-none" 
-                     loading="lazy"
-                     onerror="this.onerror=null; this.src='{{ img.original }}';">
-            </div>
+        {% for item in media %}
+            {% if item.type == 'image' %}
+                <!-- Image Card -->
+                <div class="aspect-square rounded-2xl overflow-hidden bg-white/5 cursor-pointer hover:opacity-80 transition" 
+                     onclick="openImageModal('{{ item.original }}')">
+                    <img src="{{ item.thumbnail }}" 
+                         class="w-full h-full object-cover pointer-events-none" 
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='{{ item.original }}';">
+                </div>
+            {% else %}
+                <!-- Video Card Preview -->
+                <a href="/videos" class="aspect-square rounded-2xl overflow-hidden bg-black cursor-pointer hover:opacity-80 transition relative flex items-center justify-center shadow-lg group">
+                    
+                    <!-- Play Button Overlay -->
+                    <div class="absolute z-20 flex items-center justify-center pointer-events-none transition-transform group-hover:scale-110">
+                        <div class="bg-black/60 rounded-full p-3 backdrop-blur-md border border-white/20">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Muted video fetching only the first frame -->
+                    <video src="{{ item.url }}#t=0.1" 
+                           class="w-full h-full object-cover pointer-events-none opacity-80" 
+                           preload="metadata" 
+                           muted playsinline>
+                    </video>
+                </a>
+            {% endif %}
         {% else %}
-            <div class="col-span-2 text-center py-10 opacity-50">
-                <p>No photos uploaded yet. Be the first!</p>
+            <!-- Empty State -->
+            <div class="col-span-2 text-center py-10 opacity-50 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                <p class="text-lg font-medium text-white">The vault is empty. 👀</p>
+                <p class="text-sm mt-2 text-gray-400">Don't be shy—be a legend and drop the first memory.</p>
             </div>
         {% endfor %}
     </div>
@@ -111,7 +133,7 @@
             overlay.style.fontSize = '20px';
             overlay.style.fontWeight = 'bold';
 
-            overlay.innerHTML = "Uploading to Vault...";
+            overlay.innerHTML = "Developing your memories... 🎞️";
 
             document.body.appendChild(overlay);
 

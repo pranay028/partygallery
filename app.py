@@ -96,90 +96,59 @@ def generate_thumbnail_in_background(file_bytes, unique_filename, bucket_name, p
 
 
 
-
 @app.route('/images')
 def images():
-
+    # Get the page number from the URL (default to page 1)
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Limit to 20 images per page
+    
     bucket = storage_client.bucket(BUCKET_NAME)
-
     all_blobs = list(bucket.list_blobs(prefix='images/'))
-
-    file_blobs = [
-        b for b in all_blobs
-        if not b.name.endswith('/')
-    ]
-
-    file_blobs.sort(
-        key=lambda x: x.time_created,
-        reverse=True
-    )
-
+    file_blobs = [b for b in all_blobs if not b.name.endswith('/')]
+    
+    # Sort newest first
+    file_blobs.sort(key=lambda x: x.time_created, reverse=True)
+    
+    # Calculate exactly which 20 blobs to process based on the page number
+    total_images = len(file_blobs)
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    
+    # Slice the list! (This is the magic that saves server time)
+    paginated_blobs = file_blobs[start_idx:end_idx]
 
     images_data = []
-
-
-    for blob in file_blobs:
-
+    for blob in paginated_blobs:
         filename = blob.name.split('/')[-1]
-
-
         width = 1
         height = 1
 
-
         try:
             # Get thumbnail metadata
-            thumb_blob = bucket.blob(
-                f"thumbnails/{filename}"
-            )
-
+            thumb_blob = bucket.blob(f"thumbnails/{filename}")
             thumb_blob.reload()
-
             if thumb_blob.metadata:
-
-                width = int(
-                    thumb_blob.metadata.get(
-                        "width",
-                        1
-                    )
-                )
-
-                height = int(
-                    thumb_blob.metadata.get(
-                        "height",
-                        1
-                    )
-                )
-
-
+                width = int(thumb_blob.metadata.get("width", 1))
+                height = int(thumb_blob.metadata.get("height", 1))
         except Exception as e:
-
-            print(
-                "Could not read image metadata:",
-                e
-            )
-
+            print("Could not read image metadata:", e)
 
         images_data.append({
-
-            'original':
-                f"https://storage.googleapis.com/{BUCKET_NAME}/images/{filename}",
-
-            'thumbnail':
-                f"https://storage.googleapis.com/{BUCKET_NAME}/thumbnails/{filename}",
-
-            'width':
-                width,
-
-            'height':
-                height
-
+            'original': f"https://storage.googleapis.com/{BUCKET_NAME}/images/{filename}",
+            'thumbnail': f"https://storage.googleapis.com/{BUCKET_NAME}/thumbnails/{filename}",
+            'width': width,
+            'height': height
         })
 
+    # Check if there are more images after this page
+    has_next = end_idx < total_images
+    next_page = page + 1 if has_next else None
 
     return render_template(
         'images.html',
-        images=images_data
+        images=images_data,
+        next_page=next_page,
+        current_page=page
     )
 
 
@@ -226,18 +195,39 @@ def videos():
 @app.route('/')
 def index():
     bucket = storage_client.bucket(BUCKET_NAME)
-    all_blobs = list(bucket.list_blobs(prefix='images/'))
-    file_blobs = [b for b in all_blobs if not b.name.endswith('/')]
-    file_blobs.sort(key=lambda x: x.time_created, reverse=True)
     
-    images_data = []
-    for blob in file_blobs:
-        filename = blob.name.split('/')[-1] 
-        images_data.append({
-            'original': f"https://storage.googleapis.com/{BUCKET_NAME}/images/{filename}",
-            'thumbnail': f"https://storage.googleapis.com/{BUCKET_NAME}/thumbnails/{filename}"
-        })
-    return render_template('index.html', images=images_data[:4])
+    # Grab all images
+    image_blobs = list(bucket.list_blobs(prefix='images/'))
+    image_blobs = [b for b in image_blobs if not b.name.endswith('/')]
+    
+    # Grab all videos
+    video_blobs = list(bucket.list_blobs(prefix='videos/'))
+    video_blobs = [b for b in video_blobs if not b.name.endswith('/')]
+    
+    # Combine them and sort by newest first
+    all_media = image_blobs + video_blobs
+    all_media.sort(key=lambda x: x.time_created, reverse=True)
+    
+    # Process the top 4 items
+    recent_media = []
+    for blob in all_media[:4]:
+        filename = blob.name.split('/')[-1]
+        is_video = blob.name.startswith('videos/')
+        
+        if is_video:
+            recent_media.append({
+                'type': 'video',
+                'url': f"https://storage.googleapis.com/{BUCKET_NAME}/videos/{filename}"
+            })
+        else:
+            recent_media.append({
+                'type': 'image',
+                'original': f"https://storage.googleapis.com/{BUCKET_NAME}/images/{filename}",
+                'thumbnail': f"https://storage.googleapis.com/{BUCKET_NAME}/thumbnails/{filename}"
+            })
+
+    # Note: I changed the variable name from 'images' to 'media' here
+    return render_template('index.html', media=recent_media)
 
 
 
@@ -274,7 +264,9 @@ def get_signed_url():
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return 'File too large! Max is 500MB', 413
+    return 'Whoa, that file is massive! 🤯 Keep it under 500MB so we don\'t break the internet.', 413
+
+
 
 if __name__ == '__main__':
 

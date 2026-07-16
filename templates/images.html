@@ -2,25 +2,19 @@
 
 {% block content %}
 
-<div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-white">
-        All Memories
-    </h2>
-
-    <a href="/" 
-       class="text-indigo-400 text-sm hover:underline">
-        Back Home
-    </a>
+<div class="mb-6">
+    <h2 class="text-xl font-bold text-white tracking-tight">The Complete Camera Roll</h2>
+    
 </div>
 
-
-<div class="grid grid-cols-2 gap-3 auto-rows-[150px]">
-
+<!-- Changed from grid to columns-2 -->
+<div class="columns-2 gap-3 space-y-3">
 
 {% for img in images %}
 
     <div
         class="
+            break-inside-avoid
             rounded-2xl
             overflow-hidden
             bg-white/5
@@ -29,36 +23,24 @@
             transition
             hover:scale-[1.02]
             hover:shadow-2xl
-
-            {% if img.width > img.height %}
-                col-span-2
-            {% elif img.height > img.width * 1.5 %}
-                row-span-2
-            {% endif %}
         "
-
         onclick="openImageModal('{{ img.original }}')"
     >
 
         <img
             src="{{ img.thumbnail }}"
             alt="Party memory"
-
             class="
                 w-full
-                h-full
-                object-cover
-                rounded-2xl
+                h-auto
+                block
                 pointer-events-none
                 opacity-0
                 transition-opacity
                 duration-500
             "
-
             loading="lazy"
-
             onload="this.classList.remove('opacity-0')"
-
             onerror="
                 this.onerror=null;
                 this.src='{{ img.original }}';
@@ -67,30 +49,32 @@
 
     </div>
 
-
 {% else %}
 
     <div class="
-        col-span-2
+        col-span-full
         text-center
         py-16
         opacity-50
         text-white
     ">
-        <p class="text-lg">
-            No photos uploaded yet.
-        </p>
-
-        <p class="text-sm mt-2 text-gray-400">
-            Be the first one to add a memory!
-        </p>
+        <p class="text-xl font-medium tracking-wide">The vault is empty. 👀</p>
+<p class="text-sm mt-2 text-gray-400">Don't be shy—be a legend and drop the first memory.</p>
     </div>
-
 
 {% endfor %}
 
-
 </div>
-
-
+{% if next_page %}
+        <div class="mt-10 flex justify-center">
+    <a href="{{ url_for('images', page=next_page) }}" 
+   class="btn-glass px-8 py-3 text-white font-medium rounded-full shadow-lg">
+    Load More Photos ↓
+</a>
+</div>
+    {% elif current_page > 1 or images|length > 0 %}
+        <div class="mt-10 text-center text-white/30 font-medium">
+            <p>You've seen it all! 📸 End of the camera roll.</p>
+        </div>
+    {% endif %}
 {% endblock %}
