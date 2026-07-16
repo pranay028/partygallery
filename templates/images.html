@@ -1,22 +1,96 @@
 {% extends 'base.html' %}
+
 {% block content %}
-    <h2 class="text-2xl font-bold mb-6">All Memories</h2>
-    
-    <div class="grid grid-cols-2 gap-3">
-    {% for img in images %}
-        <div class="aspect-square rounded-2xl overflow-hidden bg-white/5 cursor-pointer hover:opacity-80 transition" 
-             onclick="openImageModal('{{ img.original }}')">
-             
-            <img src="{{ img.thumbnail }}" 
-     class="w-full h-full object-cover pointer-events-none" 
-     loading="lazy"
-     onerror="this.onerror=null; this.src='{{ img.original }}';">
-            
-        </div>
-    {% else %}
-        <div class="col-span-2 text-center py-10 opacity-50">
-            <p>No photos uploaded yet.</p>
-        </div>
-    {% endfor %}
+
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-white">
+        All Memories
+    </h2>
+
+    <a href="/" 
+       class="text-indigo-400 text-sm hover:underline">
+        Back Home
+    </a>
+</div>
+
+
+<div class="grid grid-cols-2 gap-3 auto-rows-[150px]">
+
+
+{% for img in images %}
+
+    <div
+        class="
+            rounded-2xl
+            overflow-hidden
+            bg-white/5
+            cursor-pointer
+            shadow-lg
+            transition
+            hover:scale-[1.02]
+            hover:shadow-2xl
+
+            {% if img.width > img.height %}
+                col-span-2
+            {% elif img.height > img.width * 1.5 %}
+                row-span-2
+            {% endif %}
+        "
+
+        onclick="openImageModal('{{ img.original }}')"
+    >
+
+        <img
+            src="{{ img.thumbnail }}"
+            alt="Party memory"
+
+            class="
+                w-full
+                h-full
+                object-cover
+                rounded-2xl
+                pointer-events-none
+                opacity-0
+                transition-opacity
+                duration-500
+            "
+
+            loading="lazy"
+
+            onload="this.classList.remove('opacity-0')"
+
+            onerror="
+                this.onerror=null;
+                this.src='{{ img.original }}';
+            "
+        >
+
     </div>
+
+
+{% else %}
+
+    <div class="
+        col-span-2
+        text-center
+        py-16
+        opacity-50
+        text-white
+    ">
+        <p class="text-lg">
+            No photos uploaded yet.
+        </p>
+
+        <p class="text-sm mt-2 text-gray-400">
+            Be the first one to add a memory!
+        </p>
+    </div>
+
+
+{% endfor %}
+
+
+</div>
+
+
 {% endblock %}

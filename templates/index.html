@@ -54,28 +54,49 @@
 
     <script>
         async function handleUpload() {
+
             const form = document.getElementById('uploadForm');
             const fileInput = document.getElementById('fileInput');
             const files = Array.from(fileInput.files);
 
-            if (files.length === 0) return;
+            if (files.length === 0) {
+                return;
+            }
 
-            // 1. Separate files
-            const videoFiles = files.filter(f => f.type.startsWith('video/'));
-            const imageFiles = files.filter(f => f.type.startsWith('image/') || f.type.includes('heic'));
-            
-            // 2. Validate Limits
+
+            // Separate images and videos
+
+            const videoFiles = files.filter(file =>
+                file.type.startsWith('video/')
+            );
+
+            const imageFiles = files.filter(file =>
+                file.type.startsWith('image/') ||
+                file.name.toLowerCase().endsWith('.heic')
+            );
+
+
+            // Validate upload limits
+
             if (imageFiles.length > 10) {
                 alert("You can only upload up to 10 photos at a time.");
                 return;
             }
+
+
             if (videoFiles.length > 1) {
                 alert("You can only upload 1 video at a time.");
                 return;
             }
 
-            // Trigger Loading Overlay
+
+
+            // Create upload overlay
+
             const overlay = document.createElement('div');
+
+            overlay.id = "uploadOverlay";
+
             overlay.style.position = 'fixed';
             overlay.style.top = '0';
             overlay.style.left = '0';
@@ -88,31 +109,158 @@
             overlay.style.justifyContent = 'center';
             overlay.style.color = 'white';
             overlay.style.fontSize = '20px';
-            overlay.innerHTML = 'Uploading to Vault...';
+            overlay.style.fontWeight = 'bold';
+
+            overlay.innerHTML = "Uploading to Vault...";
+
             document.body.appendChild(overlay);
 
-            // 3. Upload Videos directly to GCS
-            for (const file of videoFiles) {
-                const resp = await fetch(`/get-signed-url?filename=${encodeURIComponent(file.name)}&content_type=${encodeURIComponent(file.type)}`);
-                const data = await resp.json();
-                
-                await fetch(data.url, {
-                    method: 'PUT',
-                    body: file,
-                    headers: { 'Content-Type': file.type }
-                });
+
+
+            try {
+
+
+                // ==============================
+                // Upload videos directly to GCS
+                // ==============================
+
+                for (const file of videoFiles) {
+
+
+                    // Create unique filename
+
+                    const uniqueFilename =
+                        crypto.randomUUID() + "_" + file.name;
+
+
+
+                    // Get signed URL from Flask
+
+                    const signedUrlResponse = await fetch(
+                        `/get-signed-url?filename=${encodeURIComponent(uniqueFilename)}&content_type=${encodeURIComponent(file.type)}`
+                    );
+
+
+                    if (!signedUrlResponse.ok) {
+
+                        throw new Error(
+                            "Failed to generate video upload URL"
+                        );
+
+                    }
+
+
+
+                    const signedData =
+                        await signedUrlResponse.json();
+
+
+
+                    // Upload directly to GCS
+
+                    const uploadResponse = await fetch(
+                        signedData.url,
+                        {
+                            method: "PUT",
+                            body: file,
+                            headers: {
+                                "Content-Type": file.type
+                            }
+                        }
+                    );
+
+
+
+                    if (!uploadResponse.ok) {
+
+                        throw new Error(
+                            "Video upload failed"
+                        );
+
+                    }
+
+                }
+
+
+
+
+                // ==============================
+                // Upload images through Flask
+                // ==============================
+
+                if (imageFiles.length > 0) {
+
+
+                    const dataTransfer =
+                        new DataTransfer();
+
+
+
+                    imageFiles.forEach(file => {
+
+                        dataTransfer.items.add(file);
+
+                    });
+
+
+
+                    fileInput.files =
+                        dataTransfer.files;
+
+
+
+                    form.submit();
+
+
+                } 
+                else {
+
+
+                    // Video-only upload
+
+                    window.location.href = "/videos";
+
+
+                }
+
+
+
+            } 
+            catch(error) {
+
+
+                console.error(
+                    "Upload error:",
+                    error
+                );
+
+
+                alert(
+                    "Upload failed. Please try again."
+                );
+
+
+            } 
+            finally {
+
+
+                // Always remove loading screen
+
+                const existingOverlay =
+                    document.getElementById(
+                        "uploadOverlay"
+                    );
+
+
+                if (existingOverlay) {
+
+                    existingOverlay.remove();
+
+                }
+
+
             }
 
-            // 4. Remove videos from the input and submit images to Flask
-            if (imageFiles.length > 0) {
-                const dataTransfer = new DataTransfer();
-                imageFiles.forEach(file => dataTransfer.items.add(file));
-                fileInput.files = dataTransfer.files;
-                form.submit();
-            } else {
-                // If no images, just reload
-                window.location.reload();
-            }
         }
-    </script>
+        </script>
 {% endblock %}

@@ -1,1 +1,16 @@
-[{"origin": ["*"], "method": ["PUT"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]
+[
+  {
+    "origin": [
+      "https://your-cloud-run-url"
+    ],
+    "method": [
+      "GET",
+      "PUT",
+      "POST"
+    ],
+    "responseHeader": [
+      "Content-Type"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
