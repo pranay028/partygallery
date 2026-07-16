@@ -12,126 +12,170 @@
 
 </div>
 
-    <form
-        id="uploadForm"
-        action="/upload"
-        method="POST"
-        enctype="multipart/form-data"
-        class="space-y-4"
+<form
+    id="uploadForm"
+    action="/upload"
+    method="POST"
+    enctype="multipart/form-data"
+    class="space-y-4"
+>
+
+    <!-- Direct Camera Input -->
+    <input
+        type="file"
+        id="cameraInput"
+        accept="image/*"
+        capture="environment"
+        class="hidden"
     >
 
-        <!-- Hidden file input -->
-        <input
-            type="file"
-            id="fileInput"
-            name="files"
-            multiple
-            accept="image/*,video/*,.heic"
-            class="hidden"
-        >
+    <!-- Choose Existing Photos/Videos -->
+    <input
+        type="file"
+        id="fileInput"
+        name="files"
+        multiple
+        accept="image/*,video/*"
+        class="hidden"
+    >
 
-        <!-- File selection area -->
-        <div class="space-y-4">
 
-            <!-- Select Files Button -->
-            <label
-                for="fileInput"
+   <!-- File Selection Buttons -->
+<div class="grid grid-cols-2 gap-3">
+
+    <!-- Take a Photo -->
+    <label
+        for="cameraInput"
+        class="
+            block
+            w-full
+            text-center
+            bg-indigo-600
+            text-white
+            py-3
+            rounded-full
+            text-sm
+            font-semibold
+            shadow-lg
+            shadow-indigo-500/20
+            hover:bg-indigo-500
+            active:scale-[0.98]
+            transition-all
+            cursor-pointer
+        "
+    >
+        📸 Take Photo
+    </label>
+
+
+    <!-- Choose from Library -->
+    <label
+        for="fileInput"
+        class="
+            block
+            w-full
+            text-center
+            bg-white/10
+            border
+            border-white/15
+            text-white/80
+            py-3
+            rounded-full
+            text-sm
+            font-semibold
+            backdrop-blur-md
+            hover:bg-white/15
+            hover:border-white/25
+            active:scale-[0.98]
+            transition-all
+            cursor-pointer
+        "
+    >
+        🖼️ Gallery
+    </label>
+
+</div>
+
+
+    <!-- File Counter -->
+    <div
+        id="fileCounter"
+        class="
+            text-white/40
+            text-xs
+            font-medium
+            text-center
+            hidden
+            pt-1
+        "
+    >
+        0 files selected
+    </div>
+
+
+    <!-- Add to Collection -->
+    <button
+    id="uploadButton"
+    type="button"
+    onclick="handleUpload(event)"
+    class="
+        w-full
+        bg-purple-600
+        text-white
+        py-4
+        rounded-3xl
+        font-bold
+        shadow-lg
+        shadow-purple-500/30
+        hover:bg-purple-500
+        active:scale-[0.98]
+        transition-all
+        duration-300
+    "
+>
+    Add to the Collection ✨
+</button>
+
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            <div
+                id="flash-message"
                 class="
-                    mx-auto
-                    mb-3
-                    block
-                    w-3/4
-                    text-center
-                    bg-indigo-600
-                    text-white
-                    py-3
+                    bg-red-100
+                    border
+                    border-red-400
+                    text-red-700
                     px-4
-                    rounded-full
-                    text-sm
-                    font-semibold
-                    shadow-lg
-                    shadow-indigo-500/20
-                    hover:bg-indigo-500
-                    active:scale-95
-                    transition-all
-                    cursor-pointer
+                    py-3
+                    rounded
+                    relative
+                    mb-4
                 "
             >
-                Choose Memories
-            </label>
 
-            <!-- File Counter -->
-            <div
-                id="fileCounter"
-                class="text-white/50 text-xs font-medium text-center hidden"
-            >
-                0 files selected
+                <ul>
+
+                    {% for message in messages %}
+
+                        <li>
+                            {{ message }}
+                        </li>
+
+                    {% endfor %}
+
+                </ul>
+
             </div>
 
-            <!-- Upload Button -->
-            <button
-                type="button"
-                id="uploadButton"
-                onclick="handleUpload(event)"
-                class="
-                    w-full
-                    bg-purple-600
-                    text-white
-                    py-4
-                    rounded-3xl
-                    font-bold
-                    shadow-lg
-                    shadow-purple-500/30
-                    hover:bg-purple-500
-                    active:scale-[0.98]
-                    transition-all
-                    duration-300
-                "
-            >
-                Add to the Vault ✨
-            </button>
+        {% endif %}
 
-        </div>
+    {% endwith %}
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages() %}
-
-            {% if messages %}
-
-                <div
-                    id="flash-message"
-                    class="
-                        bg-red-100
-                        border
-                        border-red-400
-                        text-red-700
-                        px-4
-                        py-3
-                        rounded
-                        relative
-                        mb-4
-                    "
-                >
-
-                    <ul>
-
-                        {% for message in messages %}
-
-                            <li>
-                                {{ message }}
-                            </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-            {% endif %}
-
-        {% endwith %}
-
-    </form>
+</form>
 
 </div>
 
