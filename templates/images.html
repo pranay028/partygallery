@@ -2,52 +2,325 @@
 
 {% block content %}
 
+<!-- Page Header -->
 <div class="mb-8 mt-4 text-center">
     <h2 class="text-base font-semibold uppercase tracking-widest text-white/50">
         Camera Roll
     </h2>
-</div>
-<!-- <div class="flex justify-center mb-8 mt-4">
-    <span class="px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs font-medium uppercase tracking-wider">
-        Camera Roll
-    </span>
-</div> -->
-
-<!-- Changed from grid to columns-2 -->
-<div class="columns-2 gap-3 space-y-3 pb-24 animate-entry">
-
-{% for img in images %}
-
-    <div class="break-inside-avoid rounded-3xl overflow-hidden bg-white/5 cursor-pointer shadow-lg active:scale-[0.98] transition">
-    <img src="{{ img.thumbnail }}" alt="Memory" class="w-full h-auto block">
+    <p class="mt-2 text-xs font-medium text-white/30 tracking-wide">
+        {{ total_images }}
+        {% if total_images == 1 %}
+            PHOTO
+        {% else %}
+            PHOTOS
+        {% endif %}
+    </p>
 </div>
 
-{% else %}
 
-    <div class="
-        col-span-full
-        text-center
-        py-16
-        opacity-50
-        text-white
-    ">
-        <p class="text-xl font-medium tracking-wide">The vault is empty. 👀</p>
-<p class="text-sm mt-2 text-gray-400">Don't be shy—be a legend and drop the first memory.</p>
+<!-- Photo Grid -->
+<div id="photoGrid"
+     class="columns-2 gap-3 space-y-3 pb-24 animate-entry">
+
+    {% for img in images %}
+
+        <div class="
+            break-inside-avoid
+            rounded-3xl
+            overflow-hidden
+            bg-white/5
+            cursor-pointer
+            shadow-lg
+            active:scale-[0.98]
+            transition-transform
+            duration-200
+        "
+        onclick="openImageModal('{{ img.original }}')">
+
+            <!-- ONLY THE THUMBNAIL IS LOADED INITIALLY -->
+            <img
+                src="{{ img.thumbnail }}"
+                alt="Party memory"
+                class="w-full h-auto block"
+                loading="lazy"
+                decoding="async"
+            >
+
+        </div>
+
+    {% else %}
+
+        <div class="
+            text-center
+            py-16
+            opacity-50
+            text-white
+        ">
+            <p class="text-xl font-medium tracking-wide">
+                The vault is empty. 👀
+            </p>
+
+            <p class="text-sm mt-2 text-gray-400">
+                Don't be shy—be a legend and drop the first memory.
+            </p>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+<!-- Load More Button -->
+{% if next_page %}
+
+    <div class="mt-4 mb-6 flex justify-center">
+
+        <button
+        id="loadMoreButton"
+        onclick="loadMorePhotos()"
+        class="
+            group
+            relative
+            flex
+            items-center
+            justify-center
+            gap-2
+            w-2/3
+            mx-auto
+            -mt-2
+            px-5
+            py-2.5
+            rounded-full
+            bg-gradient-to-r
+            from-pink-500
+            to-fuchsia-500
+            border
+            border-pink-400/30
+            text-white
+            text-xs
+            font-semibold
+            shadow-lg
+            shadow-pink-500/30
+            transition-all
+            duration-300
+            hover:from-pink-400
+            hover:to-fuchsia-400
+            hover:shadow-pink-500/50
+            hover:scale-[1.03]
+            active:scale-[0.97]
+        "
+    >
+
+        <span>
+            See More
+        </span>
+
+        <span
+            class="
+                text-base
+                transition-transform
+                duration-300
+                group-hover:translate-y-1
+                animate-bounce
+            "
+            style="animation-duration: 2.5s;"
+        >
+            ↓
+        </span>
+
+    </button>
     </div>
 
-{% endfor %}
+{% elif current_page > 1 or images|length > 0 %}
 
-</div>
-{% if next_page %}
-        <div class="mt-10 flex justify-center">
-    <a href="{{ url_for('images', page=next_page) }}" 
-   class="btn-glass px-8 py-3 text-white font-medium rounded-full shadow-lg">
-    Load More Photos ↓
-</a>
-</div>
-    {% elif current_page > 1 or images|length > 0 %}
-        <div class="mt-10 text-center text-white/30 font-medium">
-            <p>You've seen it all! 📸 End of the camera roll.</p>
-        </div>
-    {% endif %}
+    <div class="mt-10 text-center text-white/30 font-medium">
+        <p>
+            You've seen it all! 📸 End of the camera roll.
+        </p>
+    </div>
+
+{% endif %}
+
+
+<script>
+
+let nextPage = {{ next_page if next_page else 'null' }};
+
+
+async function loadMorePhotos() {
+
+    const button = document.getElementById("loadMoreButton");
+
+    if (!button || !nextPage) {
+        return;
+    }
+
+
+    // Prevent duplicate clicks
+    button.disabled = true;
+
+
+    // Save original button content
+    const originalContent = button.innerHTML;
+
+
+    // Loading state
+    button.innerHTML = `
+        <span class="flex items-center gap-3">
+
+            <span class="
+                w-4
+                h-4
+                border-2
+                border-white/30
+                border-t-white
+                rounded-full
+                animate-spin
+            "></span>
+
+            <span>
+                Loading...
+            </span>
+
+        </span>
+    `;
+
+
+    try {
+
+        const response = await fetch(
+            `/images?page=${nextPage}`
+        );
+
+
+        if (!response.ok) {
+            throw new Error("Failed to load photos");
+        }
+
+
+        const html = await response.text();
+
+
+        // Parse returned HTML
+        const parser = new DOMParser();
+
+        const doc = parser.parseFromString(
+            html,
+            "text/html"
+        );
+
+
+        // Find new photos
+        const newPhotos =
+            doc.querySelectorAll(
+                "#photoGrid > div"
+            );
+
+
+        const photoGrid =
+            document.getElementById(
+                "photoGrid"
+            );
+
+
+        // Add new photos to existing photos
+        newPhotos.forEach(photo => {
+
+            photoGrid.appendChild(photo);
+
+        });
+
+
+        // Get next page from returned HTML
+        const nextPageScript =
+            doc.querySelector(
+                "script"
+            );
+
+
+        const pageMatch =
+            html.match(
+                /let nextPage = ([^;]+);/
+            );
+
+
+        if (pageMatch) {
+
+            const nextValue =
+                pageMatch[1].trim();
+
+
+            if (nextValue === "null") {
+
+                nextPage = null;
+
+            } else {
+
+                nextPage =
+                    parseInt(
+                        nextValue
+                    );
+
+            }
+
+        }
+
+
+        // No more pages
+        if (!nextPage) {
+
+            button.remove();
+
+            const endMessage =
+                document.createElement(
+                    "div"
+                );
+
+
+            endMessage.className =
+                "mt-10 text-center text-white/30 font-medium";
+
+
+            endMessage.innerHTML =
+                "<p>You've seen it all! 📸 End of the camera roll.</p>";
+
+
+            photoGrid.parentNode.appendChild(
+                endMessage
+            );
+
+        } else {
+
+            // Restore button
+            button.innerHTML =
+                originalContent;
+
+
+            button.disabled =
+                false;
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Error loading photos:",
+            error
+        );
+
+
+        button.innerHTML =
+            "Try Again";
+
+
+        button.disabled =
+            false;
+
+    }
+
+}
+
+</script>
+
 {% endblock %}

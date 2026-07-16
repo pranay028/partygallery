@@ -145,11 +145,12 @@ def images():
     next_page = page + 1 if has_next else None
 
     return render_template(
-        'images.html',
-        images=images_data,
-        next_page=next_page,
-        current_page=page
-    )
+    'images.html',
+    images=images_data,
+    next_page=next_page,
+    current_page=page,
+    total_images=total_images
+)
 
 
 
@@ -179,15 +180,32 @@ def upload():
 @app.route('/videos')
 def videos():
     bucket = storage_client.bucket(BUCKET_NAME)
-    
-    # Fetch ALL blobs (or a large enough subset)
-    blobs = list(bucket.list_blobs(prefix='videos/'))
-    
-    # Sort the entire list in memory
-    blobs.sort(key=lambda x: x.time_created, reverse=True)
-    
-    # You can now manually slice the list if you really want "pages"
-    return render_template('videos.html', videos=blobs, bucket_name=BUCKET_NAME)
+
+    videos = list(
+        bucket.list_blobs(
+            prefix='videos/'
+        )
+    )
+
+    videos = [
+        video
+        for video in videos
+        if not video.name.endswith('/')
+    ]
+
+    videos.sort(
+        key=lambda x: x.time_created,
+        reverse=True
+    )
+
+    total_videos = len(videos)
+
+    return render_template(
+        'videos.html',
+        videos=videos,
+        bucket_name=BUCKET_NAME,
+        total_videos=total_videos
+    )
 
 
 

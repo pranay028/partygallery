@@ -1,202 +1,539 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-3xl shadow-2xl mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-white">The Party Vault 📸</h2>
-        <p class="text-sm text-gray-400 mb-6 italic">
-            "Group shots, candid chaos, or blurry masterpieces—if it happened tonight, it belongs in the vault."
-        </p>
-        
-        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data" class="space-y-4">
-            <!-- Hide the ugly default input, keep it functional -->
-   <div class="space-y-4">
-    <!-- Select Files: Added mb-6 for extra breathing room -->
-    <label for="fileInput" class="mx-auto block w-3/4 text-center bg-indigo-600 text-white py-3 mb-6 rounded-full text-sm font-semibold shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all cursor-pointer">
-        Select Files
-    </label>
 
-    <!-- File Counter -->
-    <div id="fileCounter" class="text-white/40 text-xs font-medium text-center hidden mb-2">
-        0 files selected
-    </div>
+<div class="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-3xl shadow-2xl mb-8">
 
-    <!-- Add to Collection: Now clearly separated -->
-    <button type="button" onclick="handleUpload(event)"
-            class="w-full bg-purple-600 text-white py-4 rounded-3xl font-bold shadow-lg shadow-purple-500/30 
-                   hover:bg-purple-500 active:scale-[0.98] transition-all duration-300">
-        Add to the Collection ✨
-    </button>
+    <div class="text-center mb-8"> <h1 class="text-3xl font-extrabold tracking-tight text-white"> The Party Vault 📸 </h1>
+
+<p class="mt-3 text-sm text-gray-400 italic max-w-sm mx-auto">
+    "Group shots, candid chaos, or blurry masterpieces—if it happened tonight, it belongs in the vault."
+</p>
+
 </div>
 
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <div id="flash-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                        <ul>
-                        {% for message in messages %}
-                            <li>{{ message }}</li>
-                        {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </form>
-    </div>
+    <form
+        id="uploadForm"
+        action="/upload"
+        method="POST"
+        enctype="multipart/form-data"
+        class="space-y-4"
+    >
 
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-white">Fresh Drops 🔥</h2>
-        
-    </div>
+        <!-- Hidden file input -->
+        <input
+            type="file"
+            id="fileInput"
+            name="files"
+            multiple
+            accept="image/*,video/*,.heic"
+            class="hidden"
+        >
 
-    <div class="grid grid-cols-2 gap-3">
-        {% for item in media %}
-            {% if item.type == 'image' %}
-                <!-- Image Card -->
-                <div class="aspect-square rounded-2xl overflow-hidden bg-white/5 cursor-pointer hover:opacity-80 transition" 
-                     onclick="openImageModal('{{ item.original }}')">
-                    <img src="{{ item.thumbnail }}" 
-                         class="w-full h-full object-cover pointer-events-none" 
-                         loading="lazy"
-                         onerror="this.onerror=null; this.src='{{ item.original }}';">
-                </div>
-            {% else %}
-                <!-- Video Card Preview -->
-                <a href="/videos" class="aspect-square rounded-2xl overflow-hidden bg-black cursor-pointer hover:opacity-80 transition relative flex items-center justify-center shadow-lg group">
-                    
-                    <!-- Play Button Overlay -->
-                    <div class="absolute z-20 flex items-center justify-center pointer-events-none transition-transform group-hover:scale-110">
-                        <div class="bg-black/60 rounded-full p-3 backdrop-blur-md border border-white/20">
-                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
-                        </div>
-                    </div>
-                    
-                    <!-- Muted video fetching only the first frame -->
-                    <video src="{{ item.url }}#t=0.1" 
-                           class="w-full h-full object-cover pointer-events-none opacity-80" 
-                           preload="metadata" 
-                           muted playsinline>
-                    </video>
-                </a>
-            {% endif %}
-        {% else %}
-            <!-- Empty State -->
-            <div class="col-span-2 text-center py-10 opacity-50 bg-white/5 rounded-2xl border border-white/10 border-dashed">
-                <p class="text-lg font-medium text-white">The vault is empty. 👀</p>
-                <p class="text-sm mt-2 text-gray-400">Don't be shy—be a legend and drop the first memory.</p>
+        <!-- File selection area -->
+        <div class="space-y-4">
+
+            <!-- Select Files Button -->
+            <label
+                for="fileInput"
+                class="
+                    mx-auto
+                    mb-3
+                    block
+                    w-3/4
+                    text-center
+                    bg-indigo-600
+                    text-white
+                    py-3
+                    px-4
+                    rounded-full
+                    text-sm
+                    font-semibold
+                    shadow-lg
+                    shadow-indigo-500/20
+                    hover:bg-indigo-500
+                    active:scale-95
+                    transition-all
+                    cursor-pointer
+                "
+            >
+                Choose Memories
+            </label>
+
+            <!-- File Counter -->
+            <div
+                id="fileCounter"
+                class="text-white/50 text-xs font-medium text-center hidden"
+            >
+                0 files selected
             </div>
-        {% endfor %}
-    </div>
 
-    <script>
-        const fileInput = document.getElementById('fileInput');
-        const fileCounter = document.getElementById('fileCounter');
+            <!-- Upload Button -->
+            <button
+                type="button"
+                id="uploadButton"
+                onclick="handleUpload(event)"
+                class="
+                    w-full
+                    bg-purple-600
+                    text-white
+                    py-4
+                    rounded-3xl
+                    font-bold
+                    shadow-lg
+                    shadow-purple-500/30
+                    hover:bg-purple-500
+                    active:scale-[0.98]
+                    transition-all
+                    duration-300
+                "
+            >
+                Add to the Vault ✨
+            </button>
 
-        fileInput.addEventListener('change', () => {
-            const count = fileInput.files.length;
-            if (count > 0) {
-                fileCounter.textContent = `${count} file(s) selected`;
-                fileCounter.classList.remove('hidden');
-            }
-        });
-        async function handleUpload() {
+        </div>
 
-            const form = document.getElementById('uploadForm');
-            const fileInput = document.getElementById('fileInput');
-            const files = Array.from(fileInput.files);
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
 
-            if (files.length === 0) {
-                return;
-            }
+            {% if messages %}
 
+                <div
+                    id="flash-message"
+                    class="
+                        bg-red-100
+                        border
+                        border-red-400
+                        text-red-700
+                        px-4
+                        py-3
+                        rounded
+                        relative
+                        mb-4
+                    "
+                >
 
-            // Separate images and videos
+                    <ul>
 
-            const videoFiles = files.filter(file =>
-                file.type.startsWith('video/')
-            );
+                        {% for message in messages %}
 
-            const imageFiles = files.filter(file =>
-                file.type.startsWith('image/') ||
-                file.name.toLowerCase().endsWith('.heic')
-            );
+                            <li>
+                                {{ message }}
+                            </li>
 
+                        {% endfor %}
 
-            // Validate upload limits
+                    </ul>
 
-            if (imageFiles.length > 10) {
-                alert("You can only upload up to 10 photos at a time.");
-                return;
-            }
-
-
-            if (videoFiles.length > 1) {
-                alert("You can only upload 1 video at a time.");
-                return;
-            }
-
-
-
-            // Create upload overlay
-
-            const overlay = document.createElement('div');
-            overlay.id = "uploadOverlay";
-            // Use a clean, blurred, glass-like background
-            overlay.className = "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md";
-            overlay.innerHTML = `
-                <div class="animate-pulse text-white text-xl font-bold flex flex-col items-center gap-4">
-                    <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                    Developing your memories... 🎞️
                 </div>
-            `;
-            document.body.appendChild(overlay);
+
+            {% endif %}
+
+        {% endwith %}
+
+    </form>
+
+</div>
 
 
+<!-- Recent Media Heading -->
 
-            try {
+<div class="flex justify-between items-center mb-4">
 
+    <h2 class="text-lg font-semibold text-white">
+        Fresh Drops 🔥
+    </h2>
 
-                // ==============================
-                // Upload videos directly to GCS
-                // ==============================
-
-                for (const file of videoFiles) {
-
-
-                    // Create unique filename
-
-                    const uniqueFilename =
-                        crypto.randomUUID() + "_" + file.name;
+</div>
 
 
+<!-- Media Grid -->
 
-                    // Get signed URL from Flask
+<div class="grid grid-cols-2 gap-3">
 
-                    const signedUrlResponse = await fetch(
+    {% for item in media %}
+
+        {% if item.type == 'image' %}
+
+            <!-- Image Card -->
+
+            <div
+                class="
+                    aspect-square
+                    rounded-2xl
+                    overflow-hidden
+                    bg-white/5
+                    cursor-pointer
+                    hover:opacity-80
+                    transition
+                "
+                onclick="openImageModal('{{ item.original }}')"
+            >
+
+                <img
+                    src="{{ item.thumbnail }}"
+                    alt="Party memory"
+                    class="
+                        w-full
+                        h-full
+                        object-cover
+                        pointer-events-none
+                    "
+                    loading="lazy"
+                    onerror="
+                        this.onerror=null;
+                        this.src='{{ item.original }}';
+                    "
+                >
+
+            </div>
+
+
+        {% else %}
+
+            <!-- Video Card -->
+
+            <a
+                href="/videos"
+                class="
+                    aspect-square
+                    rounded-2xl
+                    overflow-hidden
+                    bg-black
+                    cursor-pointer
+                    hover:opacity-80
+                    transition
+                    relative
+                    flex
+                    items-center
+                    justify-center
+                    shadow-lg
+                    group
+                "
+            >
+
+                <!-- Play Button -->
+
+                <div
+                    class="
+                        absolute
+                        z-20
+                        flex
+                        items-center
+                        justify-center
+                        pointer-events-none
+                        transition-transform
+                        group-hover:scale-110
+                    "
+                >
+
+                    <div
+                        class="
+                            bg-black/60
+                            rounded-full
+                            p-3
+                            backdrop-blur-md
+                            border
+                            border-white/20
+                        "
+                    >
+
+                        <svg
+                            class="w-6 h-6 text-white ml-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                        >
+
+                            <path d="M4 4l12 6-12 6z"/>
+
+                        </svg>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Video Preview -->
+
+                <video
+                    src="{{ item.url }}#t=0.1"
+                    class="
+                        w-full
+                        h-full
+                        object-cover
+                        pointer-events-none
+                        opacity-80
+                    "
+                    preload="metadata"
+                    muted
+                    playsinline
+                >
+
+                </video>
+
+            </a>
+
+        {% endif %}
+
+
+    {% else %}
+
+        <!-- Empty State -->
+
+        <div
+            class="
+                col-span-2
+                text-center
+                py-10
+                opacity-50
+                bg-white/5
+                rounded-2xl
+                border
+                border-white/10
+                border-dashed
+            "
+        >
+
+            <p class="text-lg font-medium text-white">
+                The vault is empty. 👀
+            </p>
+
+            <p class="text-sm mt-2 text-gray-400">
+                Don't be shy—be a legend and drop the first memory.
+            </p>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       FILE SELECTION
+    ========================================================= */
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const fileCounter =
+        document.getElementById("fileCounter");
+
+    const uploadButton =
+        document.getElementById("uploadButton");
+
+
+    fileInput.addEventListener("change", function () {
+
+        const count =
+            fileInput.files.length;
+
+
+        if (count === 0) {
+
+            fileCounter.classList.add("hidden");
+
+            fileCounter.textContent = "";
+
+            return;
+
+        }
+
+
+        fileCounter.textContent =
+            `${count} file${count === 1 ? "" : "s"} selected`;
+
+        fileCounter.classList.remove("hidden");
+
+    });
+
+
+    /* =========================================================
+       UPLOAD FUNCTION
+    ========================================================= */
+
+    async function handleUpload(event) {
+
+        if (event) {
+
+            event.preventDefault();
+
+        }
+
+
+        const form =
+            document.getElementById("uploadForm");
+
+
+        const files =
+            Array.from(fileInput.files);
+
+
+        /* No files selected */
+
+        if (files.length === 0) {
+
+            alert("Please select at least one file.");
+
+            return;
+
+        }
+
+
+        /* Separate images and videos */
+
+        const videoFiles =
+            files.filter(file =>
+                file.type.startsWith("video/")
+            );
+
+
+        const imageFiles =
+            files.filter(file =>
+                file.type.startsWith("image/") ||
+                file.name.toLowerCase().endsWith(".heic")
+            );
+
+
+        /* Validate upload limits */
+
+        if (imageFiles.length > 10) {
+
+            alert(
+                "You can only upload up to 10 photos at a time."
+            );
+
+            return;
+
+        }
+
+
+        if (videoFiles.length > 1) {
+
+            alert(
+                "You can only upload 1 video at a time."
+            );
+
+            return;
+
+        }
+
+
+        /* Prevent duplicate clicks */
+
+        uploadButton.disabled = true;
+
+        uploadButton.textContent =
+            "Uploading...";
+
+
+        /* Create upload overlay */
+
+        const overlay =
+            document.createElement("div");
+
+
+        overlay.id =
+            "uploadOverlay";
+
+
+        overlay.className =
+            "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md";
+
+
+        overlay.innerHTML = `
+
+            <div
+                class="
+                    text-white
+                    text-xl
+                    font-bold
+                    flex
+                    flex-col
+                    items-center
+                    gap-4
+                    text-center
+                    px-6
+                "
+            >
+
+                <div
+                    class="
+                        w-12
+                        h-12
+                        border-4
+                        border-purple-500
+                        border-t-transparent
+                        rounded-full
+                        animate-spin
+                    "
+                >
+                </div>
+
+
+                <div>
+                    Sending your memories to the vault... 📸
+                </div>
+
+            </div>
+
+        `;
+
+
+        document.body.appendChild(overlay);
+
+
+        try {
+
+
+            /* =====================================================
+               UPLOAD VIDEOS DIRECTLY TO GOOGLE CLOUD STORAGE
+            ===================================================== */
+
+            for (const file of videoFiles) {
+
+
+                /* Generate unique filename */
+
+                const uniqueFilename =
+                    crypto.randomUUID() +
+                    "_" +
+                    file.name;
+
+
+                /* Get signed URL from Flask */
+
+                const signedUrlResponse =
+                    await fetch(
                         `/get-signed-url?filename=${encodeURIComponent(uniqueFilename)}&content_type=${encodeURIComponent(file.type)}`
                     );
 
 
-                    if (!signedUrlResponse.ok) {
+                if (!signedUrlResponse.ok) {
 
-                        throw new Error(
-                            "Failed to generate video upload URL"
-                        );
+                    throw new Error(
+                        "Failed to generate video upload URL."
+                    );
 
-                    }
-
-
-
-                    const signedData =
-                        await signedUrlResponse.json();
+                }
 
 
+                const signedData =
+                    await signedUrlResponse.json();
 
-                    // Upload directly to GCS
 
-                    const uploadResponse = await fetch(
+                /* Upload video directly to GCS */
+
+                const uploadResponse =
+                    await fetch(
                         signedData.url,
                         {
                             method: "PUT",
+
                             body: file,
+
                             headers: {
                                 "Content-Type": file.type
                             }
@@ -204,97 +541,106 @@
                     );
 
 
+                if (!uploadResponse.ok) {
 
-                    if (!uploadResponse.ok) {
-
-                        throw new Error(
-                            "Video upload failed"
-                        );
-
-                    }
-
-                }
-
-
-
-
-                // ==============================
-                // Upload images through Flask
-                // ==============================
-
-                if (imageFiles.length > 0) {
-
-
-                    const dataTransfer =
-                        new DataTransfer();
-
-
-
-                    imageFiles.forEach(file => {
-
-                        dataTransfer.items.add(file);
-
-                    });
-
-
-
-                    fileInput.files =
-                        dataTransfer.files;
-
-
-
-                    form.submit();
-
-
-                } 
-                else {
-
-
-                    // Video-only upload
-
-                    window.location.href = "/videos";
-
-
-                }
-
-
-
-            } 
-            catch(error) {
-
-
-                console.error(
-                    "Upload error:",
-                    error
-                );
-
-
-                alert(
-                    "Upload failed. Please try again."
-                );
-
-
-            } 
-            finally {
-
-
-                // Always remove loading screen
-
-                const existingOverlay =
-                    document.getElementById(
-                        "uploadOverlay"
+                    throw new Error(
+                        "Video upload failed."
                     );
 
-
-                if (existingOverlay) {
-
-                    existingOverlay.remove();
-
                 }
-
 
             }
 
+
+            /* =====================================================
+               UPLOAD IMAGES THROUGH FLASK
+            ===================================================== */
+
+            if (imageFiles.length > 0) {
+
+
+                const dataTransfer =
+                    new DataTransfer();
+
+
+                imageFiles.forEach(file => {
+
+                    dataTransfer.items.add(file);
+
+                });
+
+
+                fileInput.files =
+                    dataTransfer.files;
+
+
+                /*
+                    Submit the form.
+
+                    The overlay remains visible while
+                    the browser sends the files to Flask.
+                */
+
+                form.submit();
+
+                return;
+
+            }
+
+
+            /* =====================================================
+               VIDEO-ONLY UPLOAD
+            ===================================================== */
+
+            window.location.href =
+                "/videos";
+
+
         }
-        </script>
+
+
+        catch (error) {
+
+
+            console.error(
+                "Upload error:",
+                error
+            );
+
+
+            alert(
+                "Upload failed. Please try again."
+            );
+
+
+            /* Remove overlay after failure */
+
+            const existingOverlay =
+                document.getElementById(
+                    "uploadOverlay"
+                );
+
+
+            if (existingOverlay) {
+
+                existingOverlay.remove();
+
+            }
+
+
+            /* Re-enable upload button */
+
+            uploadButton.disabled =
+                false;
+
+
+            uploadButton.textContent =
+                "Add to the Collection ✨";
+
+        }
+
+    }
+
+</script>
+
 {% endblock %}
