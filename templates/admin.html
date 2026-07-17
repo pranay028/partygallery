@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if not authenticated %}
+
+<!-- =====================================================
+     ADMIN LOGIN
+===================================================== -->
+
+<div class="min-h-[70vh] flex items-center justify-center">
+
+    <div class="
+        w-full
+        max-w-md
+        bg-white/5
+        backdrop-blur-lg
+        border
+        border-white/10
+        p-8
+        rounded-3xl
+        shadow-2xl
+    ">
+
+        <div class="text-center mb-8">
+
+            <div class="text-5xl mb-4">
+                🔐
+            </div>
+
+            <h1 class="text-2xl font-bold text-white">
+                Party Vault Admin
+            </h1>
+
+            <p class="text-white/40 text-sm mt-2">
+                Enter the admin password to manage the vault.
+            </p>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('admin') }}"
+            class="space-y-4"
+        >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Admin password"
+                required
+                autofocus
+                class="
+                    w-full
+                    bg-black/30
+                    border
+                    border-white/10
+                    rounded-2xl
+                    px-5
+                    py-4
+                    text-white
+                    placeholder-white/30
+                    outline-none
+                    focus:border-indigo-500
+                    transition
+                "
+            >
+
+            <button
+                type="submit"
+                class="
+                    w-full
+                    bg-indigo-600
+                    hover:bg-indigo-500
+                    text-white
+                    py-4
+                    rounded-2xl
+                    font-bold
+                    transition-all
+                    active:scale-[0.98]
+                    shadow-lg
+                    shadow-indigo-500/20
+                "
+            >
+
+                Enter Admin Panel
+
+            </button>
+
+        </form>
+
+
+        {% with messages = get_flashed_messages() %}
+
+            {% if messages %}
+
+                <div class="mt-5 space-y-2">
+
+                    {% for message in messages %}
+
+                        <div class="
+                            bg-red-500/10
+                            border
+                            border-red-500/20
+                            text-red-300
+                            p-3
+                            rounded-2xl
+                            text-center
+                            text-sm
+                        ">
+
+                            {{ message }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+    </div>
+
+</div>
+
+
+{% else %}
+
+<!-- =====================================================
+     ADMIN PHOTO DASHBOARD
+===================================================== -->
+
+<div class="flex justify-between items-center mb-6">
+
+    <div>
+
+        <h1 class="text-2xl font-bold text-white">
+            Admin Panel 🛠️
+        </h1>
+
+        <p class="text-white/40 text-sm mt-1">
+            Manage your party memories.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('admin_logout') }}"
+        class="
+            text-sm
+            text-red-400
+            hover:text-red-300
+            transition
+        "
+    >
+
+        Logout
+
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     ADMIN TABS
+===================================================== -->
+
+<div class="flex gap-3 mb-8">
+
+    <!-- ACTIVE PHOTOS TAB -->
+
+    <a
+        href="{{ url_for('admin') }}"
+        class="
+            flex-1
+            text-center
+            px-4
+            py-3
+            rounded-2xl
+            bg-indigo-600
+            text-white
+            text-sm
+            font-semibold
+            shadow-lg
+            shadow-indigo-500/20
+        "
+    >
+
+        📸 Photos
+
+    </a>
+
+
+    <!-- VIDEOS TAB -->
+
+    <a
+        href="{{ url_for('admin_videos') }}"
+        class="
+            flex-1
+            text-center
+            px-4
+            py-3
+            rounded-2xl
+            bg-white/5
+            border
+            border-white/10
+            text-white/60
+            text-sm
+            font-semibold
+            hover:bg-white/10
+            hover:text-white
+            transition
+        "
+    >
+
+        🎬 Videos
+
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     PHOTO COUNT
+===================================================== -->
+
+<div class="flex justify-between items-center mb-4">
+
+    <h2 class="text-lg font-bold text-white">
+
+        Photos 📸
+
+    </h2>
+
+    <span class="text-white/40 text-sm">
+
+        {{ images|length }} total
+
+    </span>
+
+</div>
+
+
+<!-- =====================================================
+     PHOTO GRID
+===================================================== -->
+
+<div class="columns-2 gap-3 space-y-3 mb-10">
+
+    {% for image in images %}
+
+    <div class="
+        break-inside-avoid
+        rounded-2xl
+        overflow-hidden
+        bg-white/5
+        border
+        border-white/10
+        shadow-lg
+    ">
+
+        <img
+            src="{{ image.thumbnail }}"
+            alt="Party photo"
+            class="w-full h-auto block"
+            loading="lazy"
+            onerror="
+                this.onerror=null;
+                this.src='{{ image.original }}';
+            "
+        >
+
+
+        <!-- DELETE PHOTO -->
+
+        <form
+            method="POST"
+            action="{{ url_for('delete_image', filename=image.filename) }}"
+            onsubmit="
+                return confirm(
+                    'Delete this photo permanently?'
+                );
+            "
+        >
+
+            <button
+                type="submit"
+                class="
+                    w-full
+                    bg-red-500/10
+                    hover:bg-red-500/20
+                    text-red-400
+                    py-3
+                    text-sm
+                    font-semibold
+                    transition
+                "
+            >
+
+                🗑️ Delete Photo
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% else %}
+
+    <div class="
+        text-center
+        py-16
+        text-white/40
+    ">
+
+        <p class="text-lg">
+            No photos found 📸
+        </p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+{% endif %}
+
+{% endblock %}

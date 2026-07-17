@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- =====================================================
+     ADMIN VIDEO HEADER
+===================================================== -->
+
+<div class="flex justify-between items-center mb-6">
+
+    <div>
+
+        <h1 class="text-2xl font-bold text-white">
+            Admin Videos 🎬
+        </h1>
+
+        <p class="text-white/40 text-sm mt-1">
+            Manage party footage.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('admin_logout') }}"
+        class="
+            text-sm
+            text-red-400
+            hover:text-red-300
+            transition
+        "
+    >
+
+        Logout
+
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     ADMIN TABS
+===================================================== -->
+
+<div class="flex gap-3 mb-8">
+
+    <!-- PHOTOS -->
+
+    <a
+        href="{{ url_for('admin') }}"
+        class="
+            flex-1
+            text-center
+            px-4
+            py-3
+            rounded-2xl
+            bg-white/5
+            border
+            border-white/10
+            text-white/60
+            text-sm
+            font-semibold
+            hover:bg-white/10
+            hover:text-white
+            transition
+        "
+    >
+
+        📸 Photos
+
+    </a>
+
+
+    <!-- ACTIVE VIDEOS -->
+
+    <a
+        href="{{ url_for('admin_videos') }}"
+        class="
+            flex-1
+            text-center
+            px-4
+            py-3
+            rounded-2xl
+            bg-indigo-600
+            text-white
+            text-sm
+            font-semibold
+            shadow-lg
+            shadow-indigo-500/20
+        "
+    >
+
+        🎬 Videos
+
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     VIDEO COUNT
+===================================================== -->
+
+<div class="flex justify-between items-center mb-4">
+
+    <h2 class="text-lg font-bold text-white">
+
+        Videos 🎬
+
+    </h2>
+
+    <span class="text-white/40 text-sm">
+
+        {{ videos|length }} total
+
+    </span>
+
+</div>
+
+
+<!-- =====================================================
+     VIDEO LIST
+===================================================== -->
+
+<div class="space-y-5">
+
+    {% for video in videos %}
+
+    <div class="
+        rounded-2xl
+        overflow-hidden
+        bg-black
+        border
+        border-white/10
+        shadow-lg
+    ">
+
+        <video
+            controls
+            preload="metadata"
+            playsinline
+            class="w-full"
+        >
+
+            <source
+                src="{{ video.url }}"
+                type="video/mp4"
+            >
+
+            Your browser does not support the video tag.
+
+        </video>
+
+
+        <!-- DELETE VIDEO -->
+
+        <form
+            method="POST"
+            action="{{ url_for('delete_video', filename=video.filename) }}"
+            onsubmit="
+                return confirm(
+                    'Delete this video permanently?'
+                );
+            "
+        >
+
+            <button
+                type="submit"
+                class="
+                    w-full
+                    bg-red-500/10
+                    hover:bg-red-500/20
+                    text-red-400
+                    py-3
+                    text-sm
+                    font-semibold
+                    transition
+                "
+            >
+
+                🗑️ Delete Video
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% else %}
+
+    <div class="
+        text-center
+        py-16
+        text-white/40
+    ">
+
+        <p class="text-lg">
+            No videos found 🎬
+        </p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+{% endblock %}

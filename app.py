@@ -11,6 +11,7 @@ from flask import (
     redirect,
     url_for,
     jsonify,
+    session
 )
 from datetime import timedelta
 import google.auth
@@ -44,7 +45,7 @@ app.secret_key = os.getenv("APP_FLASK_SECRET_KEY")
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 
 
-
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 
 
@@ -276,7 +277,357 @@ def get_signed_url():
     return jsonify({"url": url})
 
 
+# ----------_ADMIN ROUTES ----------
 
+# ============================================================
+# ADMIN LOGIN / PHOTO DASHBOARD
+# ============================================================
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+
+    # --------------------------------------------------------
+    # Admin password must be configured
+    # --------------------------------------------------------
+
+    if not ADMIN_PASSWORD:
+        return "Admin password is not configured.", 500
+
+
+    # --------------------------------------------------------
+    # Handle login
+    # --------------------------------------------------------
+
+    if request.method == 'POST':
+
+        password = request.form.get('password', '')
+
+
+        if password == ADMIN_PASSWORD:
+
+            session['is_admin'] = True
+
+            return redirect(
+                url_for('admin')
+            )
+
+
+        else:
+
+            flash("Incorrect admin password.")
+
+            return render_template(
+                'admin.html',
+                authenticated=False
+            )
+
+
+    # --------------------------------------------------------
+    # If already logged in, show dashboard
+    # --------------------------------------------------------
+
+    if session.get('is_admin'):
+
+        bucket = storage_client.bucket(
+            BUCKET_NAME
+        )
+
+
+        # ====================================================
+        # GET ALL IMAGES
+        # ====================================================
+
+        image_blobs = list(
+            bucket.list_blobs(
+                prefix='images/'
+            )
+        )
+
+
+        image_blobs = [
+            blob
+            for blob in image_blobs
+            if not blob.name.endswith('/')
+        ]
+
+
+        image_blobs.sort(
+            key=lambda x: x.time_created,
+            reverse=True
+        )
+
+
+        images = []
+
+
+        for blob in image_blobs:
+
+            filename = blob.name.split('/')[-1]
+
+
+            images.append({
+
+                'filename': filename,
+
+                'original':
+                    f"https://storage.googleapis.com/"
+                    f"{BUCKET_NAME}/images/{filename}",
+
+                'thumbnail':
+                    f"https://storage.googleapis.com/"
+                    f"{BUCKET_NAME}/thumbnails/{filename}"
+
+            })
+
+
+        return render_template(
+
+            'admin.html',
+
+            authenticated=True,
+
+            images=images
+
+        )
+
+
+    # --------------------------------------------------------
+    # Show login page
+    # --------------------------------------------------------
+
+    return render_template(
+
+        'admin.html',
+
+        authenticated=False
+
+    )
+
+
+# ============================================================
+# ADMIN VIDEO MANAGEMENT
+# ============================================================
+
+@app.route('/admin/videos')
+def admin_videos():
+
+    # --------------------------------------------------------
+    # Protect admin page
+    # --------------------------------------------------------
+
+    if not session.get('is_admin'):
+
+        return redirect(
+            url_for('admin')
+        )
+
+
+    bucket = storage_client.bucket(
+        BUCKET_NAME
+    )
+
+
+    # --------------------------------------------------------
+    # Get all videos
+    # --------------------------------------------------------
+
+    video_blobs = list(
+        bucket.list_blobs(
+            prefix='videos/'
+        )
+    )
+
+
+    video_blobs = [
+
+        blob
+
+        for blob in video_blobs
+
+        if not blob.name.endswith('/')
+
+    ]
+
+
+    video_blobs.sort(
+
+        key=lambda x: x.time_created,
+
+        reverse=True
+
+    )
+
+
+    videos = []
+
+
+    for blob in video_blobs:
+
+        filename = blob.name.split('/')[-1]
+
+
+        videos.append({
+
+            'filename': filename,
+
+            'url':
+                f"https://storage.googleapis.com/"
+                f"{BUCKET_NAME}/videos/{filename}"
+
+        })
+
+
+    return render_template(
+
+        'admin_videos.html',
+
+        videos=videos
+
+    )
+
+
+# ============================================================
+# DELETE IMAGE
+# ============================================================
+
+@app.route(
+    '/admin/delete-image/<path:filename>',
+    methods=['POST']
+)
+def delete_image(filename):
+
+    # --------------------------------------------------------
+    # Protect route
+    # --------------------------------------------------------
+
+    if not session.get('is_admin'):
+
+        return redirect(
+            url_for('admin')
+        )
+
+
+    bucket = storage_client.bucket(
+        BUCKET_NAME
+    )
+
+
+    # --------------------------------------------------------
+    # Delete original image
+    # --------------------------------------------------------
+
+    image_blob = bucket.blob(
+
+        f"images/{filename}"
+
+    )
+
+
+    if image_blob.exists():
+
+        image_blob.delete()
+
+
+    # --------------------------------------------------------
+    # Delete thumbnail too
+    # --------------------------------------------------------
+
+    thumbnail_blob = bucket.blob(
+
+        f"thumbnails/{filename}"
+
+    )
+
+
+    if thumbnail_blob.exists():
+
+        thumbnail_blob.delete()
+
+
+    flash("Photo deleted successfully.")
+
+    return redirect(
+
+        url_for('admin')
+
+    )
+
+
+# ============================================================
+# DELETE VIDEO
+# ============================================================
+
+@app.route(
+    '/admin/delete-video/<path:filename>',
+    methods=['POST']
+)
+def delete_video(filename):
+
+    # --------------------------------------------------------
+    # Protect route
+    # --------------------------------------------------------
+
+    if not session.get('is_admin'):
+
+        return redirect(
+
+            url_for('admin')
+
+        )
+
+
+    bucket = storage_client.bucket(
+
+        BUCKET_NAME
+
+    )
+
+
+    video_blob = bucket.blob(
+
+        f"videos/{filename}"
+
+    )
+
+
+    if video_blob.exists():
+
+        video_blob.delete()
+
+
+    flash("Video deleted successfully.")
+
+
+    return redirect(
+
+        url_for('admin_videos')
+
+    )
+
+
+# ============================================================
+# ADMIN LOGOUT
+# ============================================================
+
+@app.route('/admin/logout')
+def admin_logout():
+
+    session.pop(
+
+        'is_admin',
+
+        None
+
+    )
+
+
+    return redirect(
+
+        url_for('admin')
+
+    )
+
+    
 
 
 

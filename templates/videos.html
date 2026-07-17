@@ -1,70 +1,192 @@
 {% extends 'base.html' %}
+
 {% block content %}
-    
-    
-    <div class="mb-8 mt-4 text-center">
+
+<div class="mb-8 mt-4 text-center">
+
     <h2 class="text-base font-semibold uppercase tracking-widest text-white/50">
         The Motion Picture 🍿
     </h2>
+
     <p class="mt-2 text-xs font-medium text-white/30 tracking-wide">
+
         {{ total_videos }}
+
         {% if total_videos == 1 %}
             VIDEO
         {% else %}
             VIDEOS
         {% endif %}
+
     </p>
+
 </div>
-<!-- <div class="flex justify-center mb-8 mt-4">
-    <span class="px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs font-medium uppercase tracking-wider">
-        The Motion Picture 🍿
-    </span>
-</div> -->
-  
-</div>
-    
-    <!-- Upgraded to a responsive grid (1 col mobile, 2 cols desktop) -->
-    <div class="columns-1 md:columns-2 gap-6 space-y-6 animate-entry">
-        {% for video in videos %}
-        
-        <!-- Added break-inside-avoid so videos don't split across columns -->
-        <div class="break-inside-avoid group relative rounded-3xl overflow-hidden bg-black shadow-2xl border border-white/10 transition-all duration-300 hover:border-white/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]">
-            
-            <video class="w-full max-h-[80vh] object-contain relative z-10 rounded-3xl" 
-                   preload="metadata" 
-                   playsinline 
-                   controls>
-                <source src="https://storage.googleapis.com/{{ bucket_name }}/{{ video.name }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            
-        </div>
-        
-        {% else %}
-        
-        <!-- Empty State spans all columns if grid is active -->
-        <div class="col-span-full text-center py-20 bg-white/5 rounded-3xl border border-white/10 border-dashed">
-            <h3 class="text-xl font-bold text-white/50">The screen is blank. 📺</h3>
-            <p class="text-white/30 mt-2">Hit record and show us what's happening...</p>
-        </div>
-        
-        {% endfor %}
+
+
+<!-- VIDEO GRID -->
+
+<div class="columns-1 md:columns-2 gap-6 space-y-6 animate-entry">
+
+    {% for video in videos %}
+
+    <div
+        class="
+            break-inside-avoid
+            group
+            relative
+            rounded-3xl
+            overflow-hidden
+            bg-black
+            shadow-2xl
+            border
+            border-white/10
+            transition-all
+            duration-300
+            hover:border-white/30
+            hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]
+        "
+    >
+
+        <video
+            class="
+                party-video
+                w-full
+                max-h-[80vh]
+                object-contain
+                relative
+                z-10
+                rounded-3xl
+            "
+            preload="metadata"
+            playsinline
+            controls
+        >
+
+            <source
+                src="https://storage.googleapis.com/{{ bucket_name }}/{{ video.name }}"
+                type="video/mp4"
+            >
+
+            Your browser does not support the video tag.
+
+        </video>
+
     </div>
 
-    <!-- Pagination block (unchanged logic, matching the new styling) -->
-    {% if next_page_token %}
-        <div class="mt-10 flex justify-center">
-            <a href="{{ url_for('videos', page_token=next_page_token) }}" 
-               class="px-8 py-4 bg-white/5 text-white font-bold rounded-full border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all shadow-lg hover:shadow-xl">
-                Load More Footage ↓
-            </a>
-        </div>
+
     {% else %}
-        {% if videos %}
-            <div class="mt-10 text-center text-white/30 font-medium">
-                <p>That's a wrap! 🎬 You've reached the end.</p>
-            </div>
-        {% endif %}
-    {% endif %}
+
+    <div
+        class="
+            text-center
+            py-20
+            bg-white/5
+            rounded-3xl
+            border
+            border-white/10
+            border-dashed
+        "
+    >
+
+        <h3 class="text-xl font-bold text-white/50">
+            The screen is blank. 📺
+        </h3>
+
+        <p class="text-white/30 mt-2">
+            Hit record and show us what's happening...
+        </p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+<!-- END MESSAGE -->
+
+{% if videos %}
+
+<div class="mt-10 text-center text-white/30 font-medium">
+
+    <p>
+        That's a wrap! 🎬 You've reached the end.
+    </p>
+
+</div>
+
+{% endif %}
+
+
+<!-- AUTO-PAUSE VIDEOS WHEN OFF SCREEN -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const videos =
+            document.querySelectorAll(
+                ".party-video"
+            );
+
+
+        const observer =
+            new IntersectionObserver(
+
+                function (entries) {
+
+                    entries.forEach(
+                        function (entry) {
+
+                            const video =
+                                entry.target;
+
+
+                            /*
+                             * If the video is less than
+                             * 25% visible, pause it.
+                             */
+
+                            if (
+                                !entry.isIntersecting
+                            ) {
+
+                                if (
+                                    !video.paused
+                                ) {
+
+                                    video.pause();
+
+                                }
+
+                            }
+
+                        }
+                    );
+
+                },
+
+                {
+                    threshold: 0.25
+                }
+
+            );
+
+
+        videos.forEach(
+            function (video) {
+
+                observer.observe(video);
+
+            }
+        );
+
+    }
+
+);
+
+</script>
 
 {% endblock %}

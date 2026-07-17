@@ -116,25 +116,31 @@
      FLOATING BOTTOM NAVIGATION
 ========================== -->
 
-<nav
-    class="fixed bottom-6 left-4 right-4 z-50
-           flex
-           bg-black/60
-           backdrop-blur-2xl
-           border border-white/10
-           p-2
-           rounded-full
-           shadow-2xl
-           gap-1">
+<nav class="
+    fixed
+    bottom-6
+    left-4
+    right-4
+    z-50
+    flex
+    bg-black/60
+    backdrop-blur-2xl
+    border
+    border-white/10
+    p-2
+    rounded-full
+    shadow-2xl
+    gap-1
+">
 
     {% set nav_links = [
-        ('/', '🏠 Home'),
-        ('/images', '📸 Photos'),
-        ('/videos', '🎥 Videos')
+        ('/', '🏠', 'Home'),
+        ('/images', '📸', 'Photos'),
+        ('/videos', '🎬', 'Videos')
     ] %}
 
 
-    {% for path, name in nav_links %}
+    {% for path, emoji, name in nav_links %}
 
         <a
             href="{{ path }}"
@@ -149,12 +155,21 @@
                 duration-300
 
                 {% if request.path == path %}
+
                     nav-active
+
                 {% else %}
+
                     text-white/40
                     hover:text-white
+
                 {% endif %}
-            ">
+            "
+        >
+
+            <span class="mr-1">
+                {{ emoji }}
+            </span>
 
             {{ name }}
 

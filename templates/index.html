@@ -2,34 +2,43 @@
 
 {% block content %}
 
-<div class="bg-white/5 backdrop-blur-lg border border-white/10 p-6 rounded-3xl shadow-2xl mb-8">
+<!-- ============================= -->
+<!-- PAGE HEADER -->
+<!-- ============================= -->
 
-    <div class="text-center mb-8"> <h1 class="text-3xl font-extrabold tracking-tight text-white"> The Party Vault 📸 </h1>
+<div class="text-center mb-8 mt-4">
 
-<p class="mt-3 text-sm text-gray-400 italic max-w-sm mx-auto">
-    "Group shots, candid chaos, or blurry masterpieces—if it happened tonight, it belongs in the vault."
-</p>
+    <h1 class="text-5xl font-extrabold tracking-tight text-white">
+        The Party Vault 📸
+    </h1>
+
+    <p class="text-gray-400 mt-6 italic text-lg leading-relaxed">
+        "Group shots, candid chaos, or blurry masterpieces—
+        if it happened tonight, it belongs in the vault."
+    </p>
 
 </div>
 
-<form
-    id="uploadForm"
-    action="/upload"
-    method="POST"
-    enctype="multipart/form-data"
-    class="space-y-4"
->
 
-    <!-- Direct Camera Input -->
-    <input
+<!-- ============================= -->
+<!-- UPLOAD CARD -->
+<!-- ============================= -->
+
+<div class="bg-white/5 backdrop-blur-lg border border-white/10
+            p-6 rounded-3xl shadow-2xl mb-10">
+
+
+    <!-- ONE SHARED FILE INPUT -->
+
+    <!-- <input
         type="file"
-        id="cameraInput"
-        accept="image/*"
-        capture="environment"
+        id="fileInput"
+        name="files"
+        multiple
+        accept="image/*,video/*"
         class="hidden"
-    >
-
-    <!-- Choose Existing Photos/Videos -->
+    > -->
+    <!-- Gallery / file picker -->
     <input
         type="file"
         id="fileInput"
@@ -39,135 +48,160 @@
         class="hidden"
     >
 
-
-   <!-- File Selection Buttons -->
-<div class="grid grid-cols-2 gap-3">
-
-    <!-- Take a Photo -->
-    <label
-        for="cameraInput"
-        class="
-            block
-            w-full
-            text-center
-            bg-indigo-600
-            text-white
-            py-3
-            rounded-full
-            text-sm
-            font-semibold
-            shadow-lg
-            shadow-indigo-500/20
-            hover:bg-indigo-500
-            active:scale-[0.98]
-            transition-all
-            cursor-pointer
-        "
+    <!-- Camera input -->
+    <input
+        type="file"
+        id="cameraInput"
+        accept="image/*"
+        capture="environment"
+        class="hidden"
     >
-        📸 Take Photo
-    </label>
+
+    <!-- ============================= -->
+    <!-- FILE SELECTION BUTTONS -->
+    <!-- ============================= -->
+
+    <div class="flex gap-3 mb-5">
 
 
-    <!-- Choose from Library -->
-    <label
-        for="fileInput"
-        class="
-            block
-            w-full
-            text-center
-            bg-white/10
-            border
-            border-white/15
-            text-white/80
-            py-3
-            rounded-full
-            text-sm
-            font-semibold
-            backdrop-blur-md
-            hover:bg-white/15
-            hover:border-white/25
-            active:scale-[0.98]
-            transition-all
-            cursor-pointer
-        "
-    >
-        🖼️ Gallery
-    </label>
+        <!-- TAKE PHOTO -->
 
-</div>
+        <button
+            type="button"
+            onclick="openCamera()"
+
+            class="
+                flex-1
+                bg-indigo-600
+                text-white
+                py-4
+                rounded-3xl
+                font-bold
+                shadow-lg
+                shadow-indigo-500/30
+                hover:bg-indigo-500
+                active:scale-[0.98]
+                transition-all
+                duration-300
+            "
+        >
+
+            📸 Take Photo
+
+        </button>
 
 
-    <!-- File Counter -->
-    <div
-        id="fileCounter"
-        class="
-            text-white/40
-            text-xs
-            font-medium
-            text-center
-            hidden
-            pt-1
-        "
-    >
-        0 files selected
+        <!-- GALLERY -->
+
+        <button
+            type="button"
+            onclick="openFilePicker()"
+
+            class="
+                flex-1
+                bg-white/10
+                text-white
+                py-4
+                rounded-3xl
+                font-bold
+                border
+                border-white/20
+                shadow-lg
+                hover:bg-white/20
+                active:scale-[0.98]
+                transition-all
+                duration-300
+            "
+        >
+
+            🖼️ Gallery
+
+        </button>
+
+
     </div>
 
 
-    <!-- Add to Collection -->
+    <!-- ============================= -->
+    <!-- FILE COUNTER -->
+    <!-- ============================= -->
+
+    <div
+        id="fileCounter"
+
+        class="
+            text-white/50
+            text-xs
+            font-medium
+            text-center
+            mb-4
+            hidden
+        "
+    >
+
+        0 files selected
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- UPLOAD BUTTON -->
+    <!-- ============================= -->
+
     <button
-    id="uploadButton"
-    type="button"
-    onclick="handleUpload(event)"
-    class="
-        w-full
-        bg-purple-600
-        text-white
-        py-4
-        rounded-3xl
-        font-bold
-        shadow-lg
-        shadow-purple-500/30
-        hover:bg-purple-500
-        active:scale-[0.98]
-        transition-all
-        duration-300
-    "
->
-    Add to the Collection ✨
-</button>
+        id="uploadButton"
+        type="button"
+        onclick="handleUpload()"
+
+        class="
+            w-full
+            bg-purple-600
+            text-white
+            py-4
+            
+            rounded-3xl
+            font-bold
+            shadow-lg
+            shadow-purple-500/30
+            hover:bg-purple-500
+            active:scale-[0.98]
+            transition-all
+            duration-300
+        "
+    >
+
+        Add to the Collection ✨
+
+    </button>
 
 
-    <!-- Flash Messages -->
+    <!-- FLASH MESSAGES -->
+
     {% with messages = get_flashed_messages() %}
 
         {% if messages %}
 
-            <div
-                id="flash-message"
-                class="
-                    bg-red-100
-                    border
-                    border-red-400
-                    text-red-700
-                    px-4
-                    py-3
-                    rounded
-                    relative
-                    mb-4
-                "
-            >
+            <div class="mt-5 space-y-2">
 
-                <ul>
+                {% for message in messages %}
 
-                    {% for message in messages %}
+                    <div
+                        class="
+                            bg-indigo-600/20
+                            border
+                            border-indigo-500/50
+                            text-indigo-100
+                            p-4
+                            rounded-2xl
+                            text-center
+                        "
+                    >
 
-                        <li>
-                            {{ message }}
-                        </li>
+                        {{ message }}
 
-                    {% endfor %}
+                    </div>
 
-                </ul>
+                {% endfor %}
 
             </div>
 
@@ -175,31 +209,39 @@
 
     {% endwith %}
 
-</form>
 
 </div>
 
 
-<!-- Recent Media Heading -->
+<!-- ============================= -->
+<!-- RECENT MEDIA HEADER -->
+<!-- ============================= -->
 
 <div class="flex justify-between items-center mb-4">
 
     <h2 class="text-lg font-semibold text-white">
+
         Fresh Drops 🔥
+
     </h2>
 
 </div>
 
 
-<!-- Media Grid -->
+<!-- ============================= -->
+<!-- MEDIA GRID -->
+<!-- ============================= -->
 
 <div class="grid grid-cols-2 gap-3">
 
+
     {% for item in media %}
+
 
         {% if item.type == 'image' %}
 
-            <!-- Image Card -->
+
+            <!-- IMAGE -->
 
             <div
                 class="
@@ -211,19 +253,22 @@
                     hover:opacity-80
                     transition
                 "
+
                 onclick="openImageModal('{{ item.original }}')"
             >
 
                 <img
                     src="{{ item.thumbnail }}"
-                    alt="Party memory"
+
                     class="
                         w-full
                         h-full
                         object-cover
                         pointer-events-none
                     "
+
                     loading="lazy"
+
                     onerror="
                         this.onerror=null;
                         this.src='{{ item.original }}';
@@ -235,10 +280,12 @@
 
         {% else %}
 
-            <!-- Video Card -->
+
+            <!-- VIDEO -->
 
             <a
                 href="/videos"
+
                 class="
                     aspect-square
                     rounded-2xl
@@ -256,7 +303,8 @@
                 "
             >
 
-                <!-- Play Button -->
+
+                <!-- PLAY BUTTON -->
 
                 <div
                     class="
@@ -297,10 +345,11 @@
                 </div>
 
 
-                <!-- Video Preview -->
+                <!-- VIDEO PREVIEW -->
 
                 <video
                     src="{{ item.url }}#t=0.1"
+
                     class="
                         w-full
                         h-full
@@ -308,6 +357,7 @@
                         pointer-events-none
                         opacity-80
                     "
+
                     preload="metadata"
                     muted
                     playsinline
@@ -315,14 +365,17 @@
 
                 </video>
 
+
             </a>
+
 
         {% endif %}
 
 
     {% else %}
 
-        <!-- Empty State -->
+
+        <!-- EMPTY STATE -->
 
         <div
             class="
@@ -339,28 +392,43 @@
         >
 
             <p class="text-lg font-medium text-white">
+
                 The vault is empty. 👀
+
             </p>
 
             <p class="text-sm mt-2 text-gray-400">
+
                 Don't be shy—be a legend and drop the first memory.
+
             </p>
 
         </div>
 
+
     {% endfor %}
+
 
 </div>
 
 
+<!-- ============================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================= -->
+
 <script>
 
-    /* =========================================================
-       FILE SELECTION
-    ========================================================= */
+    /*
+    =====================================================
+    FILE INPUTS
+    =====================================================
+    */
 
     const fileInput =
         document.getElementById("fileInput");
+
+    const cameraInput =
+        document.getElementById("cameraInput");
 
     const fileCounter =
         document.getElementById("fileCounter");
@@ -369,81 +437,254 @@
         document.getElementById("uploadButton");
 
 
-    fileInput.addEventListener("change", function () {
+    /*
+    =====================================================
+    OPEN CAMERA
+    =====================================================
+    */
+
+    function openCamera() {
+
+        cameraInput.click();
+
+    }
+
+
+    /*
+    =====================================================
+    OPEN GALLERY
+    =====================================================
+    */
+
+    function openFilePicker() {
+
+        fileInput.click();
+
+    }
+
+
+    /*
+    =====================================================
+    UPDATE FILE COUNTER
+    =====================================================
+    */
+
+    function updateFileCounter() {
 
         const count =
             fileInput.files.length;
 
 
-        if (count === 0) {
+        if (count > 0) {
+
+            fileCounter.textContent =
+                `${count} file${count === 1 ? "" : "s"} selected`;
+
+            fileCounter.classList.remove("hidden");
+
+        } else {
 
             fileCounter.classList.add("hidden");
 
-            fileCounter.textContent = "";
-
-            return;
-
         }
 
-
-        fileCounter.textContent =
-            `${count} file${count === 1 ? "" : "s"} selected`;
-
-        fileCounter.classList.remove("hidden");
-
-    });
+    }
 
 
-    /* =========================================================
-       UPLOAD FUNCTION
-    ========================================================= */
+    /*
+    =====================================================
+    GALLERY FILES SELECTED
+    =====================================================
+    */
 
-    async function handleUpload(event) {
+    fileInput.addEventListener(
+        "change",
+        function () {
 
-        if (event) {
-
-            event.preventDefault();
+            updateFileCounter();
 
         }
+    );
 
 
-        const form =
-            document.getElementById("uploadForm");
+    /*
+    =====================================================
+    CAMERA PHOTO TAKEN
+    =====================================================
+    */
 
+    cameraInput.addEventListener(
+        "change",
+        function () {
+
+
+            if (
+                cameraInput.files.length === 0
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            Create a new file collection
+            */
+
+            const dataTransfer =
+                new DataTransfer();
+
+
+            /*
+            Keep any files already
+            selected from the gallery
+            */
+
+            Array.from(
+                fileInput.files
+            ).forEach(
+                function (file) {
+
+                    dataTransfer.items.add(
+                        file
+                    );
+
+                }
+            );
+
+
+            /*
+            Add the newly captured
+            camera photo
+            */
+
+            Array.from(
+                cameraInput.files
+            ).forEach(
+                function (file) {
+
+                    dataTransfer.items.add(
+                        file
+                    );
+
+                }
+            );
+
+
+            /*
+            Replace the main file input
+            with the combined files
+            */
+
+            fileInput.files =
+                dataTransfer.files;
+
+
+            /*
+            Update counter
+            */
+
+            updateFileCounter();
+
+
+            /*
+            Reset camera input so the
+            user can take another photo
+            */
+
+            cameraInput.value = "";
+
+        }
+    );
+
+
+    /*
+    =====================================================
+    HANDLE UPLOAD
+    =====================================================
+    */
+
+    async function handleUpload() {
+
+
+        /*
+        Get all selected files
+        */
 
         const files =
-            Array.from(fileInput.files);
+            Array.from(
+                fileInput.files
+            );
 
 
-        /* No files selected */
+        /*
+        Prevent empty upload
+        */
 
-        if (files.length === 0) {
+        if (
+            files.length === 0
+        ) {
 
-            alert("Please select at least one file.");
+            alert(
+                "Please select or take at least one photo or video first."
+            );
 
             return;
 
         }
 
 
-        /* Separate images and videos */
+        /*
+        Separate videos
+        */
 
         const videoFiles =
-            files.filter(file =>
-                file.type.startsWith("video/")
+            files.filter(
+                function (file) {
+
+                    return file.type.startsWith(
+                        "video/"
+                    );
+
+                }
             );
 
+
+        /*
+        Separate images
+        */
 
         const imageFiles =
-            files.filter(file =>
-                file.type.startsWith("image/") ||
-                file.name.toLowerCase().endsWith(".heic")
+            files.filter(
+                function (file) {
+
+                    return (
+
+                        file.type.startsWith(
+                            "image/"
+                        )
+
+                        ||
+
+                        file.name
+                            .toLowerCase()
+                            .endsWith(
+                                ".heic"
+                            )
+
+                    );
+
+                }
             );
 
 
-        /* Validate upload limits */
+        /*
+        Limit photos
+        */
 
-        if (imageFiles.length > 10) {
+        if (
+            imageFiles.length > 10
+        ) {
 
             alert(
                 "You can only upload up to 10 photos at a time."
@@ -454,7 +695,13 @@
         }
 
 
-        if (videoFiles.length > 1) {
+        /*
+        Limit videos
+        */
+
+        if (
+            videoFiles.length > 1
+        ) {
 
             alert(
                 "You can only upload 1 video at a time."
@@ -465,18 +712,41 @@
         }
 
 
-        /* Prevent duplicate clicks */
+        /*
+        Prevent double-click uploads
+        */
 
-        uploadButton.disabled = true;
+        if (
+            uploadButton.disabled
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+        Disable upload button
+        */
+
+        uploadButton.disabled =
+            true;
+
 
         uploadButton.textContent =
             "Uploading...";
 
 
-        /* Create upload overlay */
+        /*
+        =================================================
+        CREATE UPLOAD OVERLAY
+        =================================================
+        */
 
         const overlay =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
 
         overlay.id =
@@ -484,7 +754,12 @@
 
 
         overlay.className =
-            "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md";
+            "fixed inset-0 z-[9999] " +
+            "flex flex-col " +
+            "items-center " +
+            "justify-center " +
+            "bg-black/80 " +
+            "backdrop-blur-md";
 
 
         overlay.innerHTML = `
@@ -499,7 +774,6 @@
                     items-center
                     gap-4
                     text-center
-                    px-6
                 "
             >
 
@@ -513,12 +787,13 @@
                         rounded-full
                         animate-spin
                     "
-                >
-                </div>
+                ></div>
 
 
                 <div>
-                    Sending your memories to the vault... 📸
+
+                    Uploading your memories... 🎞️
+
                 </div>
 
             </div>
@@ -526,36 +801,71 @@
         `;
 
 
-        document.body.appendChild(overlay);
+        document.body.appendChild(
+            overlay
+        );
 
+
+        /*
+        =================================================
+        UPLOAD PROCESS
+        =================================================
+        */
 
         try {
 
 
-            /* =====================================================
-               UPLOAD VIDEOS DIRECTLY TO GOOGLE CLOUD STORAGE
-            ===================================================== */
+            /*
+            =============================================
+            UPLOAD VIDEOS DIRECTLY TO GOOGLE CLOUD
+            =============================================
+            */
 
-            for (const file of videoFiles) {
+            for (
+                const file
+                of videoFiles
+            ) {
 
-
-                /* Generate unique filename */
 
                 const uniqueFilename =
-                    crypto.randomUUID() +
-                    "_" +
+                    crypto.randomUUID()
+                    +
+                    "_"
+                    +
                     file.name;
 
 
-                /* Get signed URL from Flask */
+                /*
+                Request signed URL
+                */
 
                 const signedUrlResponse =
                     await fetch(
-                        `/get-signed-url?filename=${encodeURIComponent(uniqueFilename)}&content_type=${encodeURIComponent(file.type)}`
+
+                        `/get-signed-url` +
+
+                        `?filename=` +
+
+                        encodeURIComponent(
+                            uniqueFilename
+                        )
+
+                        +
+
+                        `&content_type=`
+
+                        +
+
+                        encodeURIComponent(
+                            file.type
+                        )
+
                     );
 
 
-                if (!signedUrlResponse.ok) {
+                if (
+                    !signedUrlResponse.ok
+                ) {
 
                     throw new Error(
                         "Failed to generate video upload URL."
@@ -568,24 +878,37 @@
                     await signedUrlResponse.json();
 
 
-                /* Upload video directly to GCS */
+                /*
+                Upload video directly
+                to Google Cloud Storage
+                */
 
                 const uploadResponse =
                     await fetch(
+
                         signedData.url,
+
                         {
+
                             method: "PUT",
 
                             body: file,
 
                             headers: {
-                                "Content-Type": file.type
+
+                                "Content-Type":
+                                    file.type
+
                             }
+
                         }
+
                     );
 
 
-                if (!uploadResponse.ok) {
+                if (
+                    !uploadResponse.ok
+                ) {
 
                     throw new Error(
                         "Video upload failed."
@@ -596,22 +919,34 @@
             }
 
 
-            /* =====================================================
-               UPLOAD IMAGES THROUGH FLASK
-            ===================================================== */
+            /*
+            =============================================
+            UPLOAD IMAGES THROUGH FLASK
+            =============================================
+            */
 
-            if (imageFiles.length > 0) {
+            if (
+                imageFiles.length > 0
+            ) {
 
+
+                /*
+                Keep only images
+                */
 
                 const dataTransfer =
                     new DataTransfer();
 
 
-                imageFiles.forEach(file => {
+                imageFiles.forEach(
+                    function (file) {
 
-                    dataTransfer.items.add(file);
+                        dataTransfer.items.add(
+                            file
+                        );
 
-                });
+                    }
+                );
 
 
                 fileInput.files =
@@ -619,31 +954,78 @@
 
 
                 /*
-                    Submit the form.
+                Create a temporary form
+                */
 
-                    The overlay remains visible while
-                    the browser sends the files to Flask.
+                const form =
+                    document.createElement(
+                        "form"
+                    );
+
+
+                form.method =
+                    "POST";
+
+
+                form.action =
+                    "/upload";
+
+
+                form.enctype =
+                    "multipart/form-data";
+
+
+                form.style.display =
+                    "none";
+
+
+                /*
+                Move the file input
+                into the temporary form
+                */
+
+                form.appendChild(
+                    fileInput
+                );
+
+
+                document.body.appendChild(
+                    form
+                );
+
+
+                /*
+                Submit to Flask
                 */
 
                 form.submit();
 
-                return;
+
+            } else {
+
+
+                /*
+                Video-only upload
+                */
+
+                window.location.href =
+                    "/videos";
 
             }
-
-
-            /* =====================================================
-               VIDEO-ONLY UPLOAD
-            ===================================================== */
-
-            window.location.href =
-                "/videos";
 
 
         }
 
 
-        catch (error) {
+        /*
+        =================================================
+        ERROR HANDLING
+        =================================================
+        */
+
+        catch (
+            error
+        ) {
 
 
             console.error(
@@ -657,7 +1039,9 @@
             );
 
 
-            /* Remove overlay after failure */
+            /*
+            Remove overlay
+            */
 
             const existingOverlay =
                 document.getElementById(
@@ -665,14 +1049,18 @@
                 );
 
 
-            if (existingOverlay) {
+            if (
+                existingOverlay
+            ) {
 
                 existingOverlay.remove();
 
             }
 
 
-            /* Re-enable upload button */
+            /*
+            Re-enable button
+            */
 
             uploadButton.disabled =
                 false;
