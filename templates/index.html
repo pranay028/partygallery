@@ -28,17 +28,10 @@
             p-6 rounded-3xl shadow-2xl mb-10">
 
 
-    <!-- ONE SHARED FILE INPUT -->
+    <!-- ============================= -->
+    <!-- GALLERY FILE INPUT -->
+    <!-- ============================= -->
 
-    <!-- <input
-        type="file"
-        id="fileInput"
-        name="files"
-        multiple
-        accept="image/*,video/*"
-        class="hidden"
-    > -->
-    <!-- Gallery / file picker -->
     <input
         type="file"
         id="fileInput"
@@ -48,7 +41,11 @@
         class="hidden"
     >
 
-    <!-- Camera input -->
+
+    <!-- ============================= -->
+    <!-- CAMERA INPUT -->
+    <!-- ============================= -->
+
     <input
         type="file"
         id="cameraInput"
@@ -57,8 +54,9 @@
         class="hidden"
     >
 
+
     <!-- ============================= -->
-    <!-- FILE SELECTION BUTTONS -->
+    <!-- SELECTION BUTTONS -->
     <!-- ============================= -->
 
     <div class="flex gap-3 mb-5">
@@ -118,7 +116,6 @@
 
         </button>
 
-
     </div>
 
 
@@ -158,7 +155,6 @@
             bg-purple-600
             text-white
             py-4
-            
             rounded-3xl
             font-bold
             shadow-lg
@@ -175,7 +171,9 @@
     </button>
 
 
+    <!-- ============================= -->
     <!-- FLASH MESSAGES -->
+    <!-- ============================= -->
 
     {% with messages = get_flashed_messages() %}
 
@@ -209,7 +207,6 @@
 
     {% endwith %}
 
-
 </div>
 
 
@@ -241,7 +238,9 @@
         {% if item.type == 'image' %}
 
 
+            <!-- ============================= -->
             <!-- IMAGE -->
+            <!-- ============================= -->
 
             <div
                 class="
@@ -281,7 +280,9 @@
         {% else %}
 
 
+            <!-- ============================= -->
             <!-- VIDEO -->
+            <!-- ============================= -->
 
             <a
                 href="/videos"
@@ -375,7 +376,9 @@
     {% else %}
 
 
+        <!-- ============================= -->
         <!-- EMPTY STATE -->
+        <!-- ============================= -->
 
         <div
             class="
@@ -420,7 +423,7 @@
 
     /*
     =====================================================
-    FILE INPUTS
+    ELEMENTS
     =====================================================
     */
 
@@ -528,7 +531,7 @@
 
 
             /*
-            Create a new file collection
+            Create a new DataTransfer object
             */
 
             const dataTransfer =
@@ -536,44 +539,39 @@
 
 
             /*
-            Keep any files already
-            selected from the gallery
+            Preserve existing gallery files
             */
 
-            Array.from(
-                fileInput.files
-            ).forEach(
-                function (file) {
+            for (
+                const file
+                of fileInput.files
+            ) {
 
-                    dataTransfer.items.add(
-                        file
-                    );
+                dataTransfer.items.add(
+                    file
+                );
 
-                }
-            );
+            }
 
 
             /*
-            Add the newly captured
-            camera photo
+            Add the new camera photo
             */
 
-            Array.from(
-                cameraInput.files
-            ).forEach(
-                function (file) {
+            for (
+                const file
+                of cameraInput.files
+            ) {
 
-                    dataTransfer.items.add(
-                        file
-                    );
+                dataTransfer.items.add(
+                    file
+                );
 
-                }
-            );
+            }
 
 
             /*
-            Replace the main file input
-            with the combined files
+            Replace the gallery file list
             */
 
             fileInput.files =
@@ -588,8 +586,7 @@
 
 
             /*
-            Reset camera input so the
-            user can take another photo
+            Reset camera input
             */
 
             cameraInput.value = "";
@@ -608,7 +605,20 @@
 
 
         /*
-        Get all selected files
+        Prevent duplicate clicks
+        */
+
+        if (
+            uploadButton.disabled
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+        Get selected files
         */
 
         const files =
@@ -618,7 +628,7 @@
 
 
         /*
-        Prevent empty upload
+        Stop empty upload
         */
 
         if (
@@ -679,7 +689,7 @@
 
 
         /*
-        Limit photos
+        Validate image limit
         */
 
         if (
@@ -696,7 +706,7 @@
 
 
         /*
-        Limit videos
+        Validate video limit
         */
 
         if (
@@ -706,19 +716,6 @@
             alert(
                 "You can only upload 1 video at a time."
             );
-
-            return;
-
-        }
-
-
-        /*
-        Prevent double-click uploads
-        */
-
-        if (
-            uploadButton.disabled
-        ) {
 
             return;
 
@@ -738,9 +735,9 @@
 
 
         /*
-        =================================================
-        CREATE UPLOAD OVERLAY
-        =================================================
+        =====================================================
+        UPLOAD OVERLAY
+        =====================================================
         */
 
         const overlay =
@@ -755,11 +752,8 @@
 
         overlay.className =
             "fixed inset-0 z-[9999] " +
-            "flex flex-col " +
-            "items-center " +
-            "justify-center " +
-            "bg-black/80 " +
-            "backdrop-blur-md";
+            "flex items-center justify-center " +
+            "bg-black/80 backdrop-blur-md";
 
 
         overlay.innerHTML = `
@@ -806,19 +800,13 @@
         );
 
 
-        /*
-        =================================================
-        UPLOAD PROCESS
-        =================================================
-        */
-
         try {
 
 
             /*
-            =============================================
-            UPLOAD VIDEOS DIRECTLY TO GOOGLE CLOUD
-            =============================================
+            =================================================
+            UPLOAD VIDEOS TO GCS
+            =================================================
             */
 
             for (
@@ -834,10 +822,6 @@
                     +
                     file.name;
 
-
-                /*
-                Request signed URL
-                */
 
                 const signedUrlResponse =
                     await fetch(
@@ -878,11 +862,6 @@
                     await signedUrlResponse.json();
 
 
-                /*
-                Upload video directly
-                to Google Cloud Storage
-                */
-
                 const uploadResponse =
                     await fetch(
 
@@ -920,9 +899,9 @@
 
 
             /*
-            =============================================
+            =================================================
             UPLOAD IMAGES THROUGH FLASK
-            =============================================
+            =================================================
             */
 
             if (
@@ -930,18 +909,19 @@
             ) {
 
 
+                const formData =
+                    new FormData();
+
+
                 /*
-                Keep only images
+                Add every image separately
                 */
-
-                const dataTransfer =
-                    new DataTransfer();
-
 
                 imageFiles.forEach(
                     function (file) {
 
-                        dataTransfer.items.add(
+                        formData.append(
+                            "files",
                             file
                         );
 
@@ -949,56 +929,41 @@
                 );
 
 
-                fileInput.files =
-                    dataTransfer.files;
-
-
                 /*
-                Create a temporary form
+                Send images to Flask
                 */
 
-                const form =
-                    document.createElement(
-                        "form"
+                const imageUploadResponse =
+                    await fetch(
+                        "/upload",
+                        {
+
+                            method: "POST",
+
+                            body: formData
+
+                        }
                     );
 
 
-                form.method =
-                    "POST";
+                if (
+                    !imageUploadResponse.ok
+                ) {
 
+                    throw new Error(
+                        "Image upload failed."
+                    );
 
-                form.action =
-                    "/upload";
-
-
-                form.enctype =
-                    "multipart/form-data";
-
-
-                form.style.display =
-                    "none";
+                }
 
 
                 /*
-                Move the file input
-                into the temporary form
+                Flask redirects after upload.
+                Navigate back to home manually.
                 */
 
-                form.appendChild(
-                    fileInput
-                );
-
-
-                document.body.appendChild(
-                    form
-                );
-
-
-                /*
-                Submit to Flask
-                */
-
-                form.submit();
+                window.location.href =
+                    "/";
 
 
             } else {
@@ -1017,12 +982,6 @@
         }
 
 
-        /*
-        =================================================
-        ERROR HANDLING
-        =================================================
-        */
-
         catch (
             error
         ) {
@@ -1039,10 +998,6 @@
             );
 
 
-            /*
-            Remove overlay
-            */
-
             const existingOverlay =
                 document.getElementById(
                     "uploadOverlay"
@@ -1057,10 +1012,6 @@
 
             }
 
-
-            /*
-            Re-enable button
-            */
 
             uploadButton.disabled =
                 false;
